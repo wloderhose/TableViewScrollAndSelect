@@ -1,0 +1,6 @@
+framework module TableViewScrollAndSelect {
+  umbrella header "TableViewScrollAndSelect-umbrella.h"
+
+  export *
+  module * { export * }
+}
