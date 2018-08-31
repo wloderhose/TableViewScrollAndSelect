@@ -1,5 +1,5 @@
 //
-//  UITableViewScrollSelectionController
+//  UITableViewScrollAndSelectController.swift
 //  TableViewScrollAndSelect
 //
 //  Created by Will Loderhose on 8/31/2018.
@@ -11,17 +11,23 @@
 
 import UIKit
 
-public protocol UITableViewScrollSelectionDelegate: class {
+public protocol UITableViewScrollAndSelectDelegate: class {
     
-    func tableViewScrollSelectionDidBegin()
-    func tableViewScrollSelectionDidSelectAt(_ indexPath: IndexPath)
-    func tableViewScrollSelectionDidDeselectAt(_ indexPath: IndexPath)
-    func tableViewScrollSelectionDidEnd()
+    func tableViewDidAddToSelection(indexPath: IndexPath)
+    func tableViewDidRemoveFromSelection(indexPath: IndexPath)
+    func tableViewSelectionPanningDidBegin()
+    func tableViewSelectionPanningDidEnd()
 }
 
-public class UITableViewScrollSelectionController {
+public class UITableViewScrollAndSelectController {
     
     // MARK: - Types
+    public enum ScrollingSpeed {
+        case fast
+        case moderate
+        case slow
+    }
+    
     private enum PanDirection {
         case none
         case down
@@ -34,28 +40,26 @@ public class UITableViewScrollSelectionController {
     }
     
     // MARK: - Properties
-    weak var tableView: UITableView!
-    weak var delegate: UITableViewScrollSelectionDelegate?
-    var touchWidth: CGFloat = 60.0
+    public weak var tableView: UITableView!
+    public var touchWidth: CGFloat
+    public var scrollingSpeed: ScrollingSpeed
     
-    private var superview: UIView? {
-        return tableView.superview
-    }
+    public weak var delegate: UITableViewScrollAndSelectDelegate?
     
-    private var enabled: Bool = false {
+    public var enabled: Bool = false {
         didSet {
             if !enabled {
 //                AppDelegate.AppUtility.unlockOrientation()
                 autoScroll = false
             }
-            wrapperViewWidthConstraint.constant = enabled ? touchWidth : 0
-            superview?.layoutIfNeeded()
+            wrapperViewWidthConstraint?.constant = enabled ? touchWidth : 0
+            tableView.superview?.layoutIfNeeded()
         }
     }
     
     // The wrapper view is a clear view placed over the left side of the tableview and contains the pan and tap gesture recognizers
     private var wrapperView: UIView!
-    private var wrapperViewWidthConstraint: NSLayoutConstraint!
+    private var wrapperViewWidthConstraint: NSLayoutConstraint?
     private var tapGestureRecognizer: UITapGestureRecognizer!
     private var panGestureRecognizer: UIPanGestureRecognizer!
     
@@ -64,45 +68,53 @@ public class UITableViewScrollSelectionController {
     private var panningType: PanType = .selecting
     private var autoScroll: Bool = false
     
-    private var tableViewSuperviewObserver: NSKeyValueObservation?
-    private var tableViewEditingObserver: NSKeyValueObservation?
-    
     // MARK: - Load
-    init(tableView: UITableView) {
+    public init(tableView: UITableView) {
         
         self.tableView = tableView
-        
-        tableViewSuperviewObserver = tableView.observe(\UITableView.superview, options: [.new]) { [unowned self] (tableView, change) in
-            if self.superview != nil {
-                self.configure()
-            }
-        }
-        
-        tableViewSuperviewObserver = tableView.observe(\UITableView.isEditing, options: [.new]) { [unowned self] (tableView, change) in
-            self.enabled = change.newValue ?? false
-        }
+        self.touchWidth = 60.0
+        self.scrollingSpeed = .moderate
     }
     
-    convenience init(tableView: UITableView, touchWidth: CGFloat) {
+    public convenience init(tableView: UITableView, touchWidth: CGFloat) {
         
         self.init(tableView: tableView)
         self.touchWidth = touchWidth
     }
     
-    private func configure() {
+    public convenience init(tableView: UITableView, scrollingSpeed: ScrollingSpeed) {
+        
+        self.init(tableView: tableView)
+        self.scrollingSpeed = scrollingSpeed
+    }
+    
+    public convenience init(tableView: UITableView, touchWidth: CGFloat, scrollingSpeed: ScrollingSpeed) {
+        
+        self.init(tableView: tableView)
+        self.touchWidth = touchWidth
+        self.scrollingSpeed = scrollingSpeed
+    }
+    
+    public func configure() {
+        
+        if tableView.superview == nil || wrapperView != nil {
+            // If the table view is not added to the hierarchy yet, don't configure
+            // Likewise, if we've already been configured, don't configure again
+            return
+        }
         
         wrapperView = UIView()
         wrapperView.translatesAutoresizingMaskIntoConstraints = false
         wrapperView.backgroundColor = .clear
-        wrapperViewWidthConstraint = NSLayoutConstraint(item: wrapperView, attribute: .width, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1.0, constant: tableView.isEditing ? 60 : 0)
-        superview!.addSubview(wrapperView)
+        wrapperViewWidthConstraint = wrapperView.widthAnchor.constraint(equalToConstant: enabled ? touchWidth : 0.0)
+        tableView.superview!.addSubview(wrapperView)
         
-        NSLayoutConstraint.activate([wrapperViewWidthConstraint,
-                                     wrapperView.leadingAnchor.constraint(equalTo: superview!.layoutMarginsGuide.leadingAnchor),
-                                     wrapperView.bottomAnchor.constraint(equalTo: superview!.layoutMarginsGuide.bottomAnchor),
-                                     wrapperView.topAnchor.constraint(equalTo: superview!.layoutMarginsGuide.topAnchor)])
-        superview!.bringSubview(toFront: wrapperView)
-        superview!.layoutIfNeeded()
+        NSLayoutConstraint.activate([wrapperViewWidthConstraint!,
+                                     wrapperView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor),
+                                     wrapperView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor),
+                                     wrapperView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)])
+        tableView.superview!.bringSubview(toFront: wrapperView)
+        tableView.superview!.layoutIfNeeded()
         
         tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tap))
         tapGestureRecognizer.numberOfTapsRequired = 1
@@ -115,18 +127,12 @@ public class UITableViewScrollSelectionController {
         wrapperView.addGestureRecognizer(panGestureRecognizer)
     }
     
-    func invalidate() {
+    public func invalidate() {
         
         // Unlock app rotation
 //        AppDelegate.AppUtility.unlockOrientation()
         
         delegate = nil
-        
-        tableViewSuperviewObserver?.invalidate()
-        tableViewSuperviewObserver = nil
-        
-        tableViewEditingObserver?.invalidate()
-        tableViewEditingObserver = nil
         
         // Release gestures
         if let gesture = tapGestureRecognizer, let gestures = wrapperView.gestureRecognizers, gestures.contains(gesture) {
@@ -160,7 +166,7 @@ public class UITableViewScrollSelectionController {
         
         if panGestureRecognizer.state == .began {
             
-            delegate?.tableViewScrollSelectionDidBegin()
+            delegate?.tableViewSelectionPanningDidBegin()
             // Don't allow the app to rotate during a pan gesture
 //            AppDelegate.AppUtility.lockOrientation()
             
@@ -211,7 +217,7 @@ public class UITableViewScrollSelectionController {
         } else if panGestureRecognizer.state == .ended || panGestureRecognizer.state == .cancelled {
             
             autoScroll = false
-            delegate?.tableViewScrollSelectionDidEnd()
+            delegate?.tableViewSelectionPanningDidEnd()
 //            AppDelegate.AppUtility.unlockOrientation()
 //            AudioManager.shared.stopSounds(.tock)
         }
@@ -223,9 +229,19 @@ public class UITableViewScrollSelectionController {
             
             if self.autoScroll {
                 
+                let sections = self.tableView.numberOfSections
+                if sections == 0 {
+                    return
+                }
+                
+                let rowsInLastSection = self.tableView.numberOfRows(inSection: sections - 1)
+                if rowsInLastSection == 0 {
+                    return
+                }
+                
                 let shouldSelect = self.panningType == .selecting
                 
-                if indexPath.row == self.tableView.numberOfRows(inSection: 0) - 1 && self.panningDirection == .down {
+                if indexPath.row == rowsInLastSection - 1 && self.panningDirection == .down {
                     // This is the last row in the table view
                     self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
                     self.changeRowSelection(at: indexPath, select: shouldSelect)
@@ -239,15 +255,24 @@ public class UITableViewScrollSelectionController {
                     
                 } else {
                     
+                    let nextIndexPath: IndexPath
+                    if self.tableView.numberOfRows(inSection: indexPath.section) - 1 == indexPath.row {
+                        if indexPath.section == sections - 1 {
+                            return
+                        }
+                        nextIndexPath = IndexPath(row: 0, section: indexPath.section + 1)
+                    } else {
+                        nextIndexPath = IndexPath(row: indexPath.row + (self.panningDirection == .down ? 1 : -1), section: indexPath.section)
+                    }
+                    
                     let scrollPosition: UITableViewScrollPosition = self.panningDirection == .down ? .bottom : .top
-                    let nextIndexPath = IndexPath(row: indexPath.row + (self.panningDirection == .down ? 1 : -1), section: 0)
                     
                     if !self.isCellFullyVisible(at: indexPath) {
                         // The cell is not yet fully visible - scroll to it
                         if !isScrolling {
                             self.scrollToRow(at: indexPath, at: scrollPosition)
                         }
-                        DispatchQueue(label: "background").async {
+                        DispatchQueue(label: "TableViewScrollAndSelect").async {
                             self.updateSelectionAndAutoScrollIfNecessary(at: indexPath, isScrolling: true)
                         }
                         
@@ -255,7 +280,7 @@ public class UITableViewScrollSelectionController {
                         // The cell is fully visible, so update the selection and go to the next one
                         self.changeRowSelection(at: indexPath, select: shouldSelect)
                         self.scrollToRow(at: nextIndexPath, at: scrollPosition)
-                        DispatchQueue(label: "background").async {
+                        DispatchQueue(label: "TableViewScrollAndSelect").async {
                             self.updateSelectionAndAutoScrollIfNecessary(at: nextIndexPath, isScrolling: true)
                         }
                         
@@ -273,14 +298,23 @@ public class UITableViewScrollSelectionController {
     
     private func scrollToRow(at indexPath: IndexPath, at position: UITableViewScrollPosition) {
         
-        UIView.animate(withDuration: 0.15, delay: 0.0, options: [.curveLinear], animations: { [unowned self] in
-            self.tableView.scrollToRow(at: indexPath, at: position, animated: false)
-            }, completion: nil)
-    }
-    
-    @objc private func scroll() {
+        let duration: TimeInterval
         
-        tableView.scrollRectToVisible(CGRect(x: 0, y: tableView.contentOffset.y + 1, width: tableView.frame.width, height: tableView.frame.height), animated: true)
+        switch scrollingSpeed {
+        case .fast:
+            duration = 0.15
+        case .moderate:
+            duration = 0.25
+        case .slow:
+            duration = 0.25
+        }
+        
+        UIView.animate(withDuration: duration,
+                       delay: 0.0,
+                       options: [.curveLinear],
+                       animations: { [unowned self] in
+                        self.tableView.scrollToRow(at: indexPath, at: position, animated: false)
+                       }, completion: nil)
     }
     
     // MARK: - Private Functions
@@ -289,11 +323,11 @@ public class UITableViewScrollSelectionController {
         if select {
             tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
             tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
-            delegate?.tableViewScrollSelectionDidSelectAt(indexPath)
+            delegate?.tableViewDidAddToSelection(indexPath: indexPath)
         } else {
             tableView.deselectRow(at: indexPath, animated: true)
             tableView.delegate?.tableView?(tableView, didDeselectRowAt: indexPath)
-            delegate?.tableViewScrollSelectionDidDeselectAt(indexPath)
+            delegate?.tableViewDidRemoveFromSelection(indexPath: indexPath)
         }
     }
     

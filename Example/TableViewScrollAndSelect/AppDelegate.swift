@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  TableViewScrollAndSelect
 //
-//  Created by wloderhose on 08/31/2018.
+//  Created by Will Loderhose on 08/31/2018.
 //  Copyright (c) 2018 wloderhose. All rights reserved.
 //
 
