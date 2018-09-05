@@ -62,11 +62,16 @@ public class UITableViewScrollAndSelectController {
     private var wrapperViewWidthConstraint: NSLayoutConstraint?
     private var tapGestureRecognizer: UITapGestureRecognizer!
     private var panGestureRecognizer: UIPanGestureRecognizer!
+    private var panTimer: Timer?
     
     private var panningPosition: CGPoint = .zero
     private var panningDirection: PanDirection = .none
     private var panningType: PanType = .selecting
     private var autoScroll: Bool = false
+    
+    deinit {
+        invalidate()
+    }
     
     // MARK: - Load
     public init(tableView: UITableView) {
@@ -146,6 +151,9 @@ public class UITableViewScrollAndSelectController {
         
         // Remove wrapper view
         wrapperView.removeFromSuperview()
+        
+        panTimer?.invalidate()
+        panTimer = nil
     }
     
     // MARK: - Tapping
@@ -217,6 +225,7 @@ public class UITableViewScrollAndSelectController {
         } else if panGestureRecognizer.state == .ended || panGestureRecognizer.state == .cancelled {
             
             autoScroll = false
+            tableView.layer.removeAllAnimations()
             delegate?.tableViewSelectionPanningDidEnd()
 //            AppDelegate.AppUtility.unlockOrientation()
 //            AudioManager.shared.stopSounds(.tock)
@@ -272,17 +281,17 @@ public class UITableViewScrollAndSelectController {
                         if !isScrolling {
                             self.scrollToRow(at: indexPath, at: scrollPosition)
                         }
-                        DispatchQueue(label: "TableViewScrollAndSelect").async {
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5.0, execute: {
                             self.updateSelectionAndAutoScrollIfNecessary(at: indexPath, isScrolling: true)
-                        }
+                        })
                         
                     } else if !self.isCellFullyVisible(at: nextIndexPath) {
                         // The cell is fully visible, so update the selection and go to the next one
                         self.changeRowSelection(at: indexPath, select: shouldSelect)
                         self.scrollToRow(at: nextIndexPath, at: scrollPosition)
-                        DispatchQueue(label: "TableViewScrollAndSelect").async {
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 5.0, execute: {
                             self.updateSelectionAndAutoScrollIfNecessary(at: nextIndexPath, isScrolling: true)
-                        }
+                        })
                         
                     } else {
                         // We are currently panning across a row that is not at the top or bottom of the table view
@@ -306,12 +315,12 @@ public class UITableViewScrollAndSelectController {
         case .moderate:
             duration = 0.25
         case .slow:
-            duration = 0.25
+            duration = 0.5
         }
         
-        UIView.animate(withDuration: duration,
+        UIView.animate(withDuration: 2,
                        delay: 0.0,
-                       options: [.curveLinear],
+                       options: [.curveLinear, .allowUserInteraction],
                        animations: { [unowned self] in
                         self.tableView.scrollToRow(at: indexPath, at: position, animated: false)
                        }, completion: nil)
