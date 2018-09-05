@@ -14,6 +14,7 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
+		BE8EBCD72140229D006C7064 /* ExampleSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */; };
 		BED8E2D42139CF41002282B4 /* ExampleTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED8E2D32139CF41002282B4 /* ExampleTableViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -44,6 +45,7 @@
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		968196EDA0AF5AA975F0E8BE /* Pods-TableViewScrollAndSelect_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TableViewScrollAndSelect_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-TableViewScrollAndSelect_Example/Pods-TableViewScrollAndSelect_Example.release.xcconfig"; sourceTree = "<group>"; };
 		BE192179D118B2381A10164F /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleSettingsViewController.swift; sourceTree = "<group>"; };
 		BED8E2D32139CF41002282B4 /* ExampleTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTableViewController.swift; sourceTree = "<group>"; };
 		ED1A07E93F6B5F7B5BB24914 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		FDED563E7EEEA99CAED9DCDC /* Pods-TableViewScrollAndSelect_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TableViewScrollAndSelect_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-TableViewScrollAndSelect_Tests/Pods-TableViewScrollAndSelect_Tests.release.xcconfig"; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
+				BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */,
 			);
 			name = "Example for TableViewScrollAndSelect";
 			path = TableViewScrollAndSelect;
@@ -349,6 +352,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE8EBCD72140229D006C7064 /* ExampleSettingsViewController.swift in Sources */,
 				BED8E2D42139CF41002282B4 /* ExampleTableViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 			);
