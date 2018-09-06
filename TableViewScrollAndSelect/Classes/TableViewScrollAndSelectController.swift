@@ -357,21 +357,33 @@ public class TableViewScrollAndSelectController {
             destinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.safeAreaInsets.top)
         }
         
+        let rowsPassed = Int(timeRunning / Double(scrollAnimationDuration)) + 1
+        if rowsPassed >= panTimerChangeCount {
+            // We reached a new index path - time to select / deselect it
+            if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
+                changeRowSelection(from: selectionFromIndexPath, numberOfRows: rowsPassed - panTimerChangeCount, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
+                panTimerChangeCount = rowsPassed
+                
+            }
+        }
+        
         if timeRunning >= panTimerDuration! {
             
+            changeRowSelection(at: currentPanDetails.direction == .down ? getLastIndexPath()! : getFirstIndexPath()!, select: currentPanDetails.isSelecting)
+
             // We made it to the end of the table view
             tableView.setContentOffset(destinationOffset, animated: false)
             
             // Select / deselect final index path
-            if currentPanDetails.direction == .down {
-                if let indexPath = getLastIndexPath() {
-                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
-                }
-            } else {
-                if let indexPath = getFirstIndexPath() {
-                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
-                }
-            }
+//            if currentPanDetails.direction == .down {
+//                if let indexPath = getLastIndexPath() {
+//                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
+//                }
+//            } else {
+//                if let indexPath = getFirstIndexPath() {
+//                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
+//                }
+//            }
             
             // Stop timer
             panTimer?.invalidate()
@@ -379,15 +391,15 @@ public class TableViewScrollAndSelectController {
             
         } else {
             
-            let rowsPassed = Int(timeRunning / Double(scrollAnimationDuration))
-            if rowsPassed >= panTimerChangeCount {
-                // We reached a new index path - time to select / deselect it
-                if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
-                    changeRowSelection(from: selectionFromIndexPath, numberOfRows: rowsPassed - panTimerChangeCount, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
-                    panTimerChangeCount = rowsPassed
-                    
-                }
-            }
+//            let rowsPassed = Int(timeRunning / Double(scrollAnimationDuration))
+//            if rowsPassed >= panTimerChangeCount {
+//                // We reached a new index path - time to select / deselect it
+//                if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
+//                    changeRowSelection(from: selectionFromIndexPath, numberOfRows: rowsPassed - panTimerChangeCount, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
+//                    panTimerChangeCount = rowsPassed
+//
+//                }
+//            }
             
             // Scroll the tableview
             let distanceTraveled: CGFloat
