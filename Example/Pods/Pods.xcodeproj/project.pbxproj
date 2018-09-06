@@ -128,7 +128,7 @@
 		BC952FC04FC963C1294DCD619C9B6B3B /* UIApplication+StrictKeyWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = 10EFC5CA9570D0B49DEBF130AE38E738 /* UIApplication+StrictKeyWindow.h */; settings = {ATTRIBUTES = (Project, ); }; };
 		BE14F2198CDB0DAD98A567981D21C7A1 /* FBSnapshotTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = B5C67BFE2590E6B51BEB2BD4428FEA7E /* FBSnapshotTestCase.m */; };
 		BEC70D420426E55A29DCBDFF0CC91264 /* HooksPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 840FD64E1CCF77D2557E76A7102D5CA2 /* HooksPhase.swift */; };
-		BEE6DF9144AFCBC89B3DEA06298AB66B /* UITableViewScrollAndSelectController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4EBDAEE8E5DC45D67DD8E678F6918AE /* UITableViewScrollAndSelectController.swift */; };
+		BEE6DF9144AFCBC89B3DEA06298AB66B /* TableViewScrollAndSelectController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4EBDAEE8E5DC45D67DD8E678F6918AE /* TableViewScrollAndSelectController.swift */; };
 		BF3B7218901760A6226C7F6346BEF454 /* BeCloseTo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7097BFA4126387C0C17F186FDFCE8946 /* BeCloseTo.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		BFCE460CC33E8872B7156D4166340178 /* FBSnapshotTestCasePlatform.h in Headers */ = {isa = PBXBuildFile; fileRef = 689EEE4B5D2EE989525D994B3D81D715 /* FBSnapshotTestCasePlatform.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C06FA100C1BBEE34B863BCB8A65359C1 /* MatcherFunc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 716B8AB51715BE5FB084529BE052EBB1 /* MatcherFunc.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
@@ -412,7 +412,7 @@
 		EDE8698DB0F11FC587C0881A15B87B25 /* Equal.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Equal.swift; path = Sources/Nimble/Matchers/Equal.swift; sourceTree = "<group>"; };
 		EEB27A274F6AB06ECC6865F72275203E /* Contain.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Contain.swift; path = Sources/Nimble/Matchers/Contain.swift; sourceTree = "<group>"; };
 		EF864E31CDE2263A0321BDEE8E679E22 /* NMBExpectation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = NMBExpectation.swift; path = Sources/Nimble/Adapters/NMBExpectation.swift; sourceTree = "<group>"; };
-		F4EBDAEE8E5DC45D67DD8E678F6918AE /* UITableViewScrollAndSelectController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = UITableViewScrollAndSelectController.swift; path = TableViewScrollAndSelect/Classes/UITableViewScrollAndSelectController.swift; sourceTree = "<group>"; };
+		F4EBDAEE8E5DC45D67DD8E678F6918AE /* TableViewScrollAndSelectController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TableViewScrollAndSelectController.swift; path = TableViewScrollAndSelect/Classes/TableViewScrollAndSelectController.swift; sourceTree = "<group>"; };
 		F603B296227BBABC70245D537E904B4F /* AsyncMatcherWrapper.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AsyncMatcherWrapper.swift; path = Sources/Nimble/Matchers/AsyncMatcherWrapper.swift; sourceTree = "<group>"; };
 		F893250228CB5A19E805F4C333611455 /* UIImage+Diff.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "UIImage+Diff.m"; path = "FBSnapshotTestCase/Categories/UIImage+Diff.m"; sourceTree = "<group>"; };
 		F99BE837F5D5312CC206B5A33E0592E5 /* TableViewScrollAndSelect-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "TableViewScrollAndSelect-dummy.m"; sourceTree = "<group>"; };
@@ -512,7 +512,7 @@
 		382BD64300840399BBA201097EE14B14 /* TableViewScrollAndSelect */ = {
 			isa = PBXGroup;
 			children = (
-				F4EBDAEE8E5DC45D67DD8E678F6918AE /* UITableViewScrollAndSelectController.swift */,
+				F4EBDAEE8E5DC45D67DD8E678F6918AE /* TableViewScrollAndSelectController.swift */,
 				D0CCBD26D62D19EDDD29C8EB0A65FC4C /* Pod */,
 				A0D5003C76CDD1C95069F82741284780 /* Support Files */,
 			);
@@ -1241,7 +1241,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BEE6DF9144AFCBC89B3DEA06298AB66B /* UITableViewScrollAndSelectController.swift in Sources */,
+				BEE6DF9144AFCBC89B3DEA06298AB66B /* TableViewScrollAndSelectController.swift in Sources */,
 				10A713DB442F314BD55C362735D1DBAF /* TableViewScrollAndSelect-dummy.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

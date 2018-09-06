@@ -15,13 +15,13 @@
         <scene sceneID="ix5-0S-dHy">
             <objects>
                 <tableViewController id="t6n-ZV-XMT" customClass="ExampleTableViewController" customModule="TableViewScrollAndSelect_Example" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" allowsSelectionDuringEditing="YES" allowsMultipleSelectionDuringEditing="YES" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="5eM-NK-Ert">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="grouped" separatorStyle="default" allowsSelection="NO" allowsSelectionDuringEditing="YES" allowsMultipleSelectionDuringEditing="YES" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="18" sectionFooterHeight="18" id="5eM-NK-Ert">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <prototypes>
                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="blue" indentationWidth="10" reuseIdentifier="exampleCell" textLabel="SUI-cC-JJh" style="IBUITableViewCellStyleDefault" id="UyN-jw-0XC">
-                                <rect key="frame" x="0.0" y="28" width="375" height="44"/>
+                                <rect key="frame" x="0.0" y="55.5" width="375" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="UyN-jw-0XC" id="TCd-DG-G0X">
                                     <rect key="frame" x="0.0" y="0.0" width="375" height="43.5"/>
@@ -45,11 +45,6 @@
                     </tableView>
                     <navigationItem key="navigationItem" id="Zj2-Nu-pgJ">
                         <barButtonItem key="backBarButtonItem" title="Back" id="sYb-4W-UOy"/>
-                        <barButtonItem key="rightBarButtonItem" title="Settings" id="IUR-zP-oep">
-                            <connections>
-                                <segue destination="gLq-GY-Ug0" kind="show" identifier="showSettings" id="ZVG-hr-PrW"/>
-                            </connections>
-                        </barButtonItem>
                     </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="AfU-T2-eD2" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -59,7 +54,7 @@
         <!--Settings-->
         <scene sceneID="hVz-pP-8Ek">
             <objects>
-                <viewController id="gLq-GY-Ug0" customClass="ExampleSettingsViewController" customModule="TableViewScrollAndSelect_Example" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="ExampleSettingsViewController" id="gLq-GY-Ug0" customClass="ExampleSettingsViewController" customModule="TableViewScrollAndSelect_Example" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Bqi-1I-Daa"/>
                         <viewControllerLayoutGuide type="bottom" id="Gil-pg-JgD"/>
@@ -69,19 +64,19 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" spacing="5" translatesAutoresizingMaskIntoConstraints="NO" id="gV0-0I-QFW">
-                                <rect key="frame" x="0.0" y="64" width="375" height="603"/>
+                                <rect key="frame" x="0.0" y="20" width="375" height="647"/>
                                 <subviews>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="mTV-j7-fJH">
-                                        <rect key="frame" x="0.0" y="0.0" width="375" height="147"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="375" height="158"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Sections" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="9" translatesAutoresizingMaskIntoConstraints="NO" id="Kvo-Kt-GJx">
-                                                <rect key="frame" x="23" y="0.0" width="136.5" height="147"/>
+                                                <rect key="frame" x="23" y="0.0" width="136.5" height="158"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <pickerView contentMode="scaleToFill" horizontalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="83v-3s-r4y">
-                                                <rect key="frame" x="165" y="0.0" width="187" height="147"/>
+                                                <rect key="frame" x="165" y="0.0" width="187" height="158"/>
                                                 <connections>
                                                     <outlet property="dataSource" destination="gLq-GY-Ug0" id="nl3-Ke-Rhx"/>
                                                     <outlet property="delegate" destination="gLq-GY-Ug0" id="uwX-K2-vAw"/>
@@ -100,16 +95,16 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="5yS-MZ-qzr">
-                                        <rect key="frame" x="0.0" y="152" width="375" height="147"/>
+                                        <rect key="frame" x="0.0" y="163" width="375" height="158"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Rows per section" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="9" translatesAutoresizingMaskIntoConstraints="NO" id="otU-d2-YjK">
-                                                <rect key="frame" x="23" y="0.0" width="144.5" height="147"/>
+                                                <rect key="frame" x="23" y="0.0" width="144.5" height="158"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <pickerView contentMode="scaleToFill" horizontalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="MBD-YL-kNV">
-                                                <rect key="frame" x="173" y="0.0" width="187" height="147"/>
+                                                <rect key="frame" x="173" y="0.0" width="187" height="158"/>
                                                 <connections>
                                                     <outlet property="dataSource" destination="gLq-GY-Ug0" id="bnE-Ym-xmj"/>
                                                     <outlet property="delegate" destination="gLq-GY-Ug0" id="DWk-dA-B4n"/>
@@ -129,16 +124,16 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="eBj-us-g6f">
-                                        <rect key="frame" x="0.0" y="304" width="375" height="147"/>
+                                        <rect key="frame" x="0.0" y="326" width="375" height="158"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Scrolling Speed" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" minimumFontSize="9" translatesAutoresizingMaskIntoConstraints="NO" id="1fi-F6-hxM">
-                                                <rect key="frame" x="23" y="0.0" width="345" height="72.5"/>
+                                                <rect key="frame" x="23" y="0.0" width="345" height="80"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <segmentedControl opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="253" horizontalCompressionResistancePriority="751" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="5ep-vC-mDy">
-                                                <rect key="frame" x="23" y="72.5" width="329" height="51"/>
+                                                <rect key="frame" x="23" y="80" width="329" height="51"/>
                                                 <constraints>
                                                     <constraint firstAttribute="height" relation="lessThanOrEqual" constant="50" id="iOW-a0-9cW"/>
                                                 </constraints>
@@ -164,16 +159,16 @@
                                         </constraints>
                                     </view>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DOE-NZ-LcB">
-                                        <rect key="frame" x="0.0" y="456" width="375" height="147"/>
+                                        <rect key="frame" x="0.0" y="489" width="375" height="158"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Custom Speed (rows per second)" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumFontSize="9" translatesAutoresizingMaskIntoConstraints="NO" id="1yk-zp-ieV">
-                                                <rect key="frame" x="23" y="0.0" width="136.5" height="147"/>
+                                                <rect key="frame" x="23" y="0.0" width="136.5" height="158"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <pickerView contentMode="scaleToFill" horizontalCompressionResistancePriority="751" translatesAutoresizingMaskIntoConstraints="NO" id="M4l-Nb-8Dz">
-                                                <rect key="frame" x="165" y="0.0" width="187" height="147"/>
+                                                <rect key="frame" x="165" y="0.0" width="187" height="158"/>
                                                 <connections>
                                                     <outlet property="dataSource" destination="gLq-GY-Ug0" id="M4D-gw-1dM"/>
                                                     <outlet property="delegate" destination="gLq-GY-Ug0" id="t8v-cx-c5N"/>

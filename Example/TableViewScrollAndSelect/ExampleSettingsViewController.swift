@@ -13,10 +13,10 @@ protocol ExampleSettingsViewDelegate: class {
     
     func settingsDidChangeSectionCount(count: Int)
     func settingsDidChangeRowCount(count: Int)
-    func settingsDidChangeScrollingSpeed(speed: UITableViewScrollAndSelectController.ScrollingSpeed)
+    func settingsDidChangeScrollingSpeed(speed: TableViewScrollAndSelectController.ScrollingSpeed)
     func settingsCurrentSectionCount() -> Int
     func settingsCurrentRowCount() -> Int
-    func settingsCurrentScrollingSpeed() -> UITableViewScrollAndSelectController.ScrollingSpeed
+    func settingsCurrentScrollingSpeed() -> TableViewScrollAndSelectController.ScrollingSpeed
 }
 
 class ExampleSettingsViewController: UIViewController {
@@ -39,19 +39,19 @@ class ExampleSettingsViewController: UIViewController {
         switch delegate!.settingsCurrentScrollingSpeed() {
         case .slow:
             speedSegmentedControl.selectedSegmentIndex = 0
-            customSpeedPickerView.selectRow(39, inComponent: 0, animated: false)
+            customSpeedPickerView.selectRow(40 * 4 - 1, inComponent: 0, animated: false)
 
         case .moderate:
             speedSegmentedControl.selectedSegmentIndex = 1
-            customSpeedPickerView.selectRow(19, inComponent: 0, animated: false)
+            customSpeedPickerView.selectRow(20 * 4 - 1, inComponent: 0, animated: false)
 
         case .fast:
             speedSegmentedControl.selectedSegmentIndex = 2
-            customSpeedPickerView.selectRow(9, inComponent: 0, animated: false)
+            customSpeedPickerView.selectRow(10 * 4 - 1, inComponent: 0, animated: false)
 
         case .custom(let rowsPerSecond):
             speedSegmentedControl.selectedSegmentIndex = 3
-            customSpeedPickerView.selectRow(Int(rowsPerSecond - 1), inComponent: 0, animated: false)
+            customSpeedPickerView.selectRow(Int(rowsPerSecond * 4 - 1), inComponent: 0, animated: false)
         }
         
         updateEnabledState()
@@ -59,7 +59,7 @@ class ExampleSettingsViewController: UIViewController {
     
     @IBAction func scrollingSpeedChanged(_ sender: Any) {
         
-        let speed: UITableViewScrollAndSelectController.ScrollingSpeed
+        let speed: TableViewScrollAndSelectController.ScrollingSpeed
         if speedSegmentedControl.selectedSegmentIndex == 0 {
             speed = .slow
         } else if speedSegmentedControl.selectedSegmentIndex == 1 {
@@ -67,7 +67,7 @@ class ExampleSettingsViewController: UIViewController {
         } else if speedSegmentedControl.selectedSegmentIndex == 2 {
             speed = .fast
         } else {
-            speed = .custom(rowsPerSecond: Float(customSpeedPickerView.selectedRow(inComponent: 0)) + 1)
+            speed = .custom(rowsPerSecond: (Float(customSpeedPickerView.selectedRow(inComponent: 0)) + 1) / 4)
         }
         
         delegate!.settingsDidChangeScrollingSpeed(speed: speed)
@@ -77,22 +77,30 @@ class ExampleSettingsViewController: UIViewController {
     private func updateEnabledState() {
         
         switch delegate!.settingsCurrentScrollingSpeed() {
+            
+        case .slow:
+            customSpeedPickerView.selectRow(10 * 4 - 1, inComponent: 0, animated: false)
+            customSpeedLabel.alpha = 0.5
+            customSpeedPickerView.isUserInteractionEnabled = false
+            customSpeedPickerView.alpha = 0.5
+            
+        case .moderate:
+            customSpeedPickerView.selectRow(20 * 4 - 1, inComponent: 0, animated: false)
+            customSpeedLabel.alpha = 0.5
+            customSpeedPickerView.isUserInteractionEnabled = false
+            customSpeedPickerView.alpha = 0.5
+            
+        case .fast:
+            customSpeedPickerView.selectRow(40 * 4 - 1, inComponent: 0, animated: false)
+            customSpeedLabel.alpha = 0.5
+            customSpeedPickerView.isUserInteractionEnabled = false
+            customSpeedPickerView.alpha = 0.5
+            
         case .custom(let rowsPerSecond):
             customSpeedLabel.alpha = 1.0
             customSpeedPickerView.isUserInteractionEnabled = true
             customSpeedPickerView.alpha = 1.0
-            customSpeedPickerView.selectRow(Int(rowsPerSecond - 1), inComponent: 0, animated: false)
-        default:
-            if delegate!.settingsCurrentScrollingSpeed() == .slow {
-                customSpeedPickerView.selectRow(9, inComponent: 0, animated: false)
-            } else if delegate!.settingsCurrentScrollingSpeed() == .moderate {
-                customSpeedPickerView.selectRow(19, inComponent: 0, animated: false)
-            } else {
-                customSpeedPickerView.selectRow(39, inComponent: 0, animated: false)
-            }
-            customSpeedLabel.alpha = 0.5
-            customSpeedPickerView.isUserInteractionEnabled = false
-            customSpeedPickerView.alpha = 0.5
+            customSpeedPickerView.selectRow(Int(rowsPerSecond * 4 - 1), inComponent: 0, animated: false)
         }
     }
 
@@ -107,13 +115,18 @@ extension ExampleSettingsViewController: UIPickerViewDelegate, UIPickerViewDataS
         } else if pickerView === rowsPickerView {
             delegate!.settingsDidChangeRowCount(count: row + 1)
         } else {
-            delegate!.settingsDidChangeScrollingSpeed(speed: .custom(rowsPerSecond: Float(row + 1)))
+            delegate!.settingsDidChangeScrollingSpeed(speed: .custom(rowsPerSecond: Float(row + 1) / 4))
         }
         
     }
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        return "\(row + 1)"
+        
+        if pickerView == customSpeedPickerView {
+            return "\(Double(row) / 4 + 0.25)"
+        } else {
+            return "\(row + 1)"
+        }
     }
     
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -121,7 +134,14 @@ extension ExampleSettingsViewController: UIPickerViewDelegate, UIPickerViewDataS
     }
     
     func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        return 300
+       
+        if pickerView === sectionsPickerView {
+            return 20
+        } else if pickerView === rowsPickerView {
+            return 100
+        } else {
+            return 200
+        }
     }
     
 }

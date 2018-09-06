@@ -12,11 +12,13 @@ import TableViewScrollAndSelect
 class ExampleTableViewController: UITableViewController {
     
     // MARK: - Properties
-    private var sectionCount = 1
-    private var rowCount = 100
+    private var settingsBarButtonItem: UIBarButtonItem!
+    private var debugBarButtonItem: UIBarButtonItem!
+    
+    private var sectionCount = 4
+    private var rowCount = 25
     private var cells = [[Int]]()
-    private var scrollingSpeed: UITableViewScrollAndSelectController.ScrollingSpeed = .moderate
-    private var scrollAndSelectController: UITableViewScrollAndSelectController!
+    private var scrollAndSelectController: TableViewScrollAndSelectController!
     private var refreshButton: UIBarButtonItem!
     private var deleteButton: UIBarButtonItem!
     
@@ -29,9 +31,16 @@ class ExampleTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // IMPORTANT
+        tableView.allowsMultipleSelectionDuringEditing = true
+        
+        settingsBarButtonItem = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
+        debugBarButtonItem = UIBarButtonItem(title: "Debug", style: .plain, target: self, action: #selector(toggleDebugMode))
+        
         reloadCells()
         navigationItem.leftBarButtonItem = self.editButtonItem
-        scrollAndSelectController = UITableViewScrollAndSelectController(tableView: tableView, scrollingSpeed: scrollingSpeed)
+        navigationItem.rightBarButtonItem = settingsBarButtonItem
+        scrollAndSelectController = TableViewScrollAndSelectController(tableView: tableView, scrollingSpeed: .moderate)
         updateNavBarForSelection()
     }
     
@@ -50,7 +59,19 @@ class ExampleTableViewController: UITableViewController {
         super.setEditing(editing, animated: animated)
         
         scrollAndSelectController.enabled = editing
-        updateNavBarForSelection()
+        navigationItem.rightBarButtonItem = editing ? debugBarButtonItem : settingsBarButtonItem
+    }
+    
+    @objc private func toggleDebugMode(_ sender: Any) {
+        scrollAndSelectController.setDebugMode(on: !scrollAndSelectController.isInDebugMode)
+    }
+    
+    @objc private func showSettings(_ sender: Any) {
+        
+        self.setEditing(false, animated: true)
+        let settingsVC = storyboard!.instantiateViewController(withIdentifier: "ExampleSettingsViewController") as! ExampleSettingsViewController
+        settingsVC.delegate = self
+        navigationController!.pushViewController(settingsVC, animated: true)
     }
     
     private func reloadCells() {
@@ -71,8 +92,12 @@ class ExampleTableViewController: UITableViewController {
     
     private func updateNavBarForSelection() {
         
-        let selectionCount = tableView.indexPathsForSelectedRows?.count ?? 0
-        navigationItem.title = "\(selectionCount) selected"
+        if isEditing {
+            let selectionCount = tableView.indexPathsForSelectedRows?.count ?? 0
+            navigationItem.title = "\(selectionCount) selected"
+        } else {
+            navigationItem.title = ""
+        }
     }
 
     // MARK: - Table view data source / delegate
@@ -107,13 +132,8 @@ class ExampleTableViewController: UITableViewController {
         return 50.0
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-        if segue.identifier == "showSettings" {
-            self.setEditing(false, animated: true)
-            let settingsVC = segue.destination as! ExampleSettingsViewController
-            settingsVC.delegate = self
-        }
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "\(section)"
     }
 }
 
@@ -131,10 +151,8 @@ extension ExampleTableViewController: ExampleSettingsViewDelegate {
         reloadCells()
     }
     
-    func settingsDidChangeScrollingSpeed(speed: UITableViewScrollAndSelectController.ScrollingSpeed) {
-        
-        scrollingSpeed = speed
-        scrollAndSelectController.updateSpeed(speed)
+    func settingsDidChangeScrollingSpeed(speed: TableViewScrollAndSelectController.ScrollingSpeed) {
+        scrollAndSelectController.scrollingSpeed = speed
     }
     
     func settingsCurrentRowCount() -> Int {
@@ -145,8 +163,8 @@ extension ExampleTableViewController: ExampleSettingsViewDelegate {
         return sectionCount
     }
     
-    func settingsCurrentScrollingSpeed() -> UITableViewScrollAndSelectController.ScrollingSpeed {
-        return scrollingSpeed
+    func settingsCurrentScrollingSpeed() -> TableViewScrollAndSelectController.ScrollingSpeed {
+        return scrollAndSelectController.scrollingSpeed
     }
     
 }

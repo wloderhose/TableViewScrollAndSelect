@@ -117,11 +117,11 @@
 			children = (
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				BED8E2D32139CF41002282B4 /* ExampleTableViewController.swift */,
+				BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
-				BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */,
 			);
 			name = "Example for TableViewScrollAndSelect";
 			path = TableViewScrollAndSelect;
@@ -538,10 +538,7 @@
 			baseConfigurationReference = 49C562B287F2DB952BA12064 /* Pods-TableViewScrollAndSelect_Tests.debug.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = 4B47BJWYVA;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -561,10 +558,7 @@
 			baseConfigurationReference = FDED563E7EEEA99CAED9DCDC /* Pods-TableViewScrollAndSelect_Tests.release.xcconfig */;
 			buildSettings = {
 				DEVELOPMENT_TEAM = 4B47BJWYVA;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(SDKROOT)/Developer/Library/Frameworks",
-					"$(inherited)",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
