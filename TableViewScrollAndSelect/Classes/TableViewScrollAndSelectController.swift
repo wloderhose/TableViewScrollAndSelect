@@ -17,23 +17,30 @@ public class TableViewScrollAndSelectController {
     public weak var delegate: TableViewScrollAndSelectDelegate?
     
     public var touchWidth: CGFloat
+    public var touchAreaCoversSafeArea: Bool = true {
+        didSet {
+            setNeedsLayout()
+            layoutIfNeeded()
+        }
+    }
     public var scrollingSpeed: ScrollingSpeed
     
     public var enabled: Bool = false {
         didSet {
             if !enabled {
-                panTimer?.invalidate()
-                panTimer = nil
-                currentPanDetails = PanDetails()
+                invalidate()
+            } else {
+                setNeedsLayout()
+                layoutIfNeeded()
             }
-            wrapperViewWidthConstraint?.constant = enabled ? touchWidth : 0
-            tableView.superview?.layoutIfNeeded()
         }
     }
     
     public var isInDebugMode: Bool {
         return debugColor != nil
     }
+    
+    public var shouldTrustEstimatedRowHeightWhenScrolling: Bool = true
     
     private var scrollAnimationDuration: Float {
         
@@ -52,7 +59,6 @@ public class TableViewScrollAndSelectController {
     // The wrapper view is a clear view placed over the left side of the tableview and contains the pan and tap gesture recognizers
     private weak var tableView: UITableView!
     private var wrapperView: UIView!
-    private var wrapperViewWidthConstraint: NSLayoutConstraint?
     private var tapGestureRecognizer: UITapGestureRecognizer!
     private var panGestureRecognizer: UIPanGestureRecognizer!
     private var needsLayout: Bool = false
@@ -65,7 +71,7 @@ public class TableViewScrollAndSelectController {
     private var panTimerDestinationOffset: CGPoint?
     private var panTimerDuration: TimeInterval?
     private var panTimerChangeCount: Int = 0
-    private var panTimerStartingIndexPath: IndexPath?
+    private var panStartingIndexPath: IndexPath?
     
     // MARK: - Init
     public init(tableView: UITableView) {
@@ -101,7 +107,7 @@ public class TableViewScrollAndSelectController {
     
     public func layoutIfNeeded() {
         
-        if (tableView.superview == nil || wrapperView != nil) && !needsLayout {
+        if tableView.superview == nil || (wrapperView != nil && !needsLayout) {
             // If the table view is not added to the hierarchy yet, don't configure
             // Likewise, if we've already been configured, don't configure again
             return
@@ -109,17 +115,24 @@ public class TableViewScrollAndSelectController {
         
         needsLayout = false
         
+        wrapperView?.removeFromSuperview()
         wrapperView = UIView()
         wrapperView.translatesAutoresizingMaskIntoConstraints = false
         wrapperView?.backgroundColor = debugColor ?? .clear
         wrapperView?.alpha = 0.5
-        wrapperViewWidthConstraint = wrapperView.widthAnchor.constraint(equalToConstant: enabled ? touchWidth : 0.0)
         tableView.superview!.addSubview(wrapperView)
         
-        NSLayoutConstraint.activate([wrapperViewWidthConstraint!,
-                                     wrapperView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
-                                     wrapperView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
-                                     wrapperView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)])
+        if touchAreaCoversSafeArea {
+            NSLayoutConstraint.activate([wrapperView.leadingAnchor.constraint(equalTo: tableView.superview!.leadingAnchor, constant: -10.0),
+                                         wrapperView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchWidth),
+                                         wrapperView.bottomAnchor.constraint(equalTo: tableView.superview!.bottomAnchor, constant: 10.0),
+                                         wrapperView.topAnchor.constraint(equalTo: tableView.superview!.topAnchor)])
+        } else {
+            NSLayoutConstraint.activate([wrapperView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
+                                         wrapperView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchWidth),
+                                         wrapperView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
+                                         wrapperView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)])
+        }
         tableView.superview!.bringSubview(toFront: wrapperView)
         tableView.superview!.layoutIfNeeded()
         
@@ -147,16 +160,17 @@ public class TableViewScrollAndSelectController {
     
     public func invalidate() {
         
-        if let gesture = tapGestureRecognizer, let gestures = wrapperView.gestureRecognizers, gestures.contains(gesture) {
+        if let gesture = tapGestureRecognizer, let gestures = wrapperView?.gestureRecognizers, gestures.contains(gesture) {
             wrapperView.removeGestureRecognizer(gesture)
         }
-        if let gesture = panGestureRecognizer, let gestures = wrapperView.gestureRecognizers, gestures.contains(gesture) {
+        if let gesture = panGestureRecognizer, let gestures = wrapperView?.gestureRecognizers, gestures.contains(gesture) {
             wrapperView.removeGestureRecognizer(gesture)
         }
         tapGestureRecognizer = nil
         panGestureRecognizer = nil
         
-        wrapperView.removeFromSuperview()
+        wrapperView?.removeFromSuperview()
+        tableView.superview?.layoutIfNeeded()
         
         panTimer?.invalidate()
         panTimer = nil
@@ -187,10 +201,13 @@ public class TableViewScrollAndSelectController {
             
             // Refresh panning details
             currentPanDetails = PanDetails()
-            currentPanDetails.position = panGestureRecognizer.location(in: tableView)
+            currentPanDetails.position = panGestureRecognizer.location(in: tableView.superview!)
             
             // Select / Deselect row
-            if let indexPath = tableView.indexPathForRow(at: currentPanDetails.position) {
+            if let indexPath = tableView.indexPathForRow(at: tableView.superview!.convert(currentPanDetails.position, to: tableView)) {
+                
+                panStartingIndexPath = indexPath
+                
                 if let selectedIndexPaths = tableView.indexPathsForSelectedRows, selectedIndexPaths.contains(indexPath) {
                     currentPanDetails.mode = .deselecting
                     changeRowSelection(at: indexPath, select: false)
@@ -202,7 +219,13 @@ public class TableViewScrollAndSelectController {
             
         } else if panGestureRecognizer.state == .changed {
             
-            let newPanningPosition = panGestureRecognizer.location(in: tableView)
+            let newPanningPosition = panGestureRecognizer.location(in: tableView.superview!)
+            
+            if fabs(newPanningPosition.y - currentPanDetails.position.y) < 5.0 {
+                // Don't worry about minute changes
+                return
+            }
+            
             let isPanningDown = newPanningPosition.y > currentPanDetails.position.y
             let directionChanged = (isPanningDown && currentPanDetails.direction == .up) || (!isPanningDown && currentPanDetails.direction == .down)
             
@@ -219,7 +242,7 @@ public class TableViewScrollAndSelectController {
             currentPanDetails.position = newPanningPosition
             currentPanDetails.direction = isPanningDown ? .down : .up
             
-            guard let indexPath = tableView.indexPathForRow(at: currentPanDetails.position) else {
+            guard let indexPath = tableView.indexPathForRow(at: tableView.superview!.convert(currentPanDetails.position, to: tableView)) else {
                 return
             }
             
@@ -237,19 +260,32 @@ public class TableViewScrollAndSelectController {
                 
                 // Update selection for index path that the pan gesture changed direction over
                 changeRowSelection(at: indexPath, select: currentPanDetails.isSelecting)
+                panStartingIndexPath = indexPath
                 
-            } else if isCellFullyVisible(at: indexPath) {
+            } else if !isCellAtEdgeOfTableView(at: indexPath, direction: currentPanDetails.direction) {
                 
                 // Update selection for index path that the pan gesture changed direction over
-                changeRowSelection(at: indexPath, select: currentPanDetails.isSelecting)
+                if let starting = panStartingIndexPath {
+                    let rowsMissed: Int
+                    if currentPanDetails.direction == .down {
+                        rowsMissed = getNumberOfRowsBetween(firstIndexPath: starting, secondIndexPath: indexPath)
+                    } else {
+                        rowsMissed = getNumberOfRowsBetween(firstIndexPath: indexPath, secondIndexPath: starting)
+                    }
+                    if rowsMissed > 1 {
+                        changeRowSelection(from: indexPath, numberOfRows: rowsMissed, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
+                    } else {
+                        changeRowSelection(at: indexPath, select: currentPanDetails.isSelecting)
+                    }
+                }
+                
+                panStartingIndexPath = indexPath
                 
             } else {
 
-                print("Cell is not fully visible")
-
                 // We need to begin scrolling
                 currentPanDetails.isScrolling = true
-                panTimerStartingIndexPath = indexPath
+                panStartingIndexPath = indexPath
                 panTimerChangeCount = 0
                 panTimerStartOffset = tableView.contentOffset
                 
@@ -310,14 +346,31 @@ public class TableViewScrollAndSelectController {
         
         let timeRunning: TimeInterval = -panTimerStartTime!.timeIntervalSinceNow
         
+        let destinationOffset: CGPoint
+        if shouldTrustEstimatedRowHeightWhenScrolling {
+            destinationOffset = panTimerDestinationOffset!
+        } else if currentPanDetails.direction == .down {
+            // Scrolling down
+            destinationOffset = CGPoint(x: tableView.contentOffset.x, y: tableView.contentSize.height - tableView.bounds.height)
+        } else {
+            // Scrolling up
+            destinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.safeAreaInsets.top)
+        }
+        
         if timeRunning >= panTimerDuration! {
             
             // We made it to the end of the table view
-            tableView.setContentOffset(panTimerDestinationOffset!, animated: false)
+            tableView.setContentOffset(destinationOffset, animated: false)
             
             // Select / deselect final index path
-            if let indexPath = currentPanDetails.direction == .down ? getLastIndexPath() : getFirstIndexPath() {
-                changeRowSelection(at: indexPath, select: currentPanDetails.isSelecting)
+            if currentPanDetails.direction == .down {
+                if let indexPath = getLastIndexPath() {
+                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
+                }
+            } else {
+                if let indexPath = getFirstIndexPath() {
+                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
+                }
             }
             
             // Stop timer
@@ -326,20 +379,14 @@ public class TableViewScrollAndSelectController {
             
         } else {
             
-            print("time - \(Int(timeRunning / Double(scrollAnimationDuration)))")
-            print("count - \(panTimerChangeCount)")
             let rowsPassed = Int(timeRunning / Double(scrollAnimationDuration))
-            if rowsPassed > panTimerChangeCount {
+            if rowsPassed >= panTimerChangeCount {
                 // We reached a new index path - time to select / deselect it
-                if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panTimerStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
+                if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
                     changeRowSelection(from: selectionFromIndexPath, numberOfRows: rowsPassed - panTimerChangeCount, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
                     panTimerChangeCount = rowsPassed
                     
                 }
-//                if let nextIndexPath = getRowInTableViewOffsetFrom(indexPath: panTimerStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
-//                    changeRowSelection(at: nextIndexPath, select: currentPanDetails.isSelecting)
-//                    print("nextIndexPath - \(nextIndexPath)")
-//                }
             }
             
             // Scroll the tableview
@@ -347,14 +394,13 @@ public class TableViewScrollAndSelectController {
             let newOffset: CGPoint
             
             if currentPanDetails.direction == .down {
-                distanceTraveled = (panTimerDestinationOffset!.y - panTimerStartOffset!.y) * CGFloat(timeRunning / panTimerDuration!)
+                distanceTraveled = (destinationOffset.y - panTimerStartOffset!.y) * CGFloat(timeRunning / panTimerDuration!)
                 newOffset = CGPoint(x: tableView.contentOffset.x, y: panTimerStartOffset!.y + distanceTraveled)
             } else {
                 distanceTraveled = fabs(panTimerStartOffset!.y - panTimerDestinationOffset!.y) * CGFloat(timeRunning / panTimerDuration!)
                 newOffset = CGPoint(x: tableView.contentOffset.x, y: panTimerStartOffset!.y - distanceTraveled)
             }
             
-//            print("distanceToTravel = \(distanceTraveled); newOffset = \(newOffset)")
             tableView.setContentOffset(newOffset, animated: false)
         }
         
@@ -443,7 +489,6 @@ public class TableViewScrollAndSelectController {
     
     private func changeRowSelection(from fromIndexPath: IndexPath, numberOfRows: Int, select: Bool, direction: PanDirection) {
         
-        print("selecting - \(fromIndexPath), num - \(numberOfRows)")
         var indexPath = fromIndexPath
         var count = 0
         while count < numberOfRows {
@@ -461,27 +506,26 @@ public class TableViewScrollAndSelectController {
 
     private func changeRowSelection(at indexPath: IndexPath, select: Bool) {
         
-        if select {
+        if select && (tableView.indexPathsForSelectedRows == nil || !tableView.indexPathsForSelectedRows!.contains(indexPath)) {
             tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
             tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
             delegate?.tableViewDidAddToSelection(indexPath: indexPath)
-        } else {
+        } else if !select && (tableView.indexPathsForSelectedRows != nil && tableView.indexPathsForSelectedRows!.contains(indexPath)) {
             tableView.deselectRow(at: indexPath, animated: true)
             tableView.delegate?.tableView?(tableView, didDeselectRowAt: indexPath)
             delegate?.tableViewDidRemoveFromSelection(indexPath: indexPath)
         }
     }
     
-    private func isCellFullyVisible(at indexPath: IndexPath) -> Bool {
+    private func isCellAtEdgeOfTableView(at indexPath: IndexPath, direction: PanDirection) -> Bool {
         
-        // Determine if a cell is fully visible in the table view currently
         let cellRect = tableView.rectForRow(at: indexPath)
         
-        // Necessary hack to make it work when the cell is exactly positioned at the bottom of the table view
-        // The scroll view rightfully doesn't think it needs to be scrolled, so the scrollViewDidEnd event never gets fired
-        // We need to subtract 1 pixel from this test to make everything work properly
-        let adjustedRect = CGRect(origin: cellRect.origin, size: CGSize(width: cellRect.width, height: cellRect.height + 1.0))
-        return UIEdgeInsetsInsetRect(tableView.bounds, tableView.safeAreaInsets).contains(adjustedRect)
+        if direction == .down {
+            return cellRect.origin.y + cellRect.height + 3.0 > tableView.contentOffset.y + tableView.bounds.height
+        } else {
+            return cellRect.origin.y - 3.0 < tableView.contentOffset.y + tableView.safeAreaInsets.top
+        }
     }
 }
 

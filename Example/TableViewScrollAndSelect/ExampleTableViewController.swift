@@ -55,6 +55,10 @@ class ExampleTableViewController: UITableViewController {
         scrollAndSelectController.layoutIfNeeded()
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        scrollAndSelectController.setNeedsLayout()
+    }
+    
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
@@ -128,12 +132,17 @@ class ExampleTableViewController: UITableViewController {
         updateNavBarForSelection()
     }
     
+    // IMPORTANT: Without a correct estimated height, scrolling won't necessarily reach at the exact top/bottom of the table view
+    override func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 50.0
+    }
+    
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 50.0
     }
     
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return "\(section)"
+        return "Section \(section)"
     }
 }
 
