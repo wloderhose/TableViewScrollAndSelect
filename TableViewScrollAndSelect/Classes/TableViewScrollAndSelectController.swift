@@ -6,59 +6,118 @@
 //  Copyright © 2018 Will Loderhose. All rights reserved.
 //
 
-// MARK: - ABOUT
-// The TableViewScrollAndSelectController allows the user to select multiple cells in a UITableView
-// by panning up and down over the editing selction buttons.
-// To achieve this, a clear UIView with a pan gesture recognizer is added over the top of the left side of the table view.
-// The UIView also has a tap gesture recognizer so the user can tap to select / deselect a single cell as normal.
-// TODO: For more info, view the readme at .....
-
 import UIKit
 
+/**
+ Allows a `UITableView` to simultaneously select cells and scroll in response to simple pan gestures.
+ 
+ # Important
+ * **This class does not replace UITableViewController or create a UITableView.** In order to instantiate a `TableViewScrollAndSelectController`, you must provide it with a `UITableView` to which it will hold a weak reference.
+ 
+ * `TableViewScrollAndSelectController` is **disabled by default.** To enable, set `enabled = true` and be sure that your `UITableView` is part of the app's view hierarchy.
+ 
+ * Because the `TableViewScrollAndSelectController` creates its own `UIView`, **it is necessary to invalidate it when releasing memory**. To do this, you can either call the `invalidate()` method directly, or set `enabled = false`.
+ 
+ * If you are having trouble getting the table view to end scrolling at the correct point, refer to the section about estimated row heights at the end of this description.
+ 
+ # Example Usage
+ ```
+ class MyTableViewController: UITableViewController {
+ 
+    let scrollAndSelectController: TableViewScrollAndSelectController
+ 
+    // Instantiate the TableViewScrollAndSelectController
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        scrollAndSelectController = TableViewScrollAndSelectController(tableView: tableView)
+    }
+ 
+    // Enable/disable when the table view begins/ends editing
+    override func setEditing(_ editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        scrollAndSelectController.enabled = editing
+    }
+ 
+    // Invalidate to release memory
+    deinit {
+        scrollAndSelectController?.invalidate()
+    }
+ }
+ ```
+ 
+ # Debug Mode
+ Call `setDebugMode(_:color:)` to turn debug mode on or off or to set a custom debug color, which is green by default. When debug mode is turned on, the `TableViewScrollAndSelectController` will color its touch view and print out event logs to the console.
+ 
+ # More Details
+ **Touch view:** `TableViewScrollAndSelectController` adds an invisible `UIView` as the topmost view over your `UITableView`. This touch view and your `UITableView` share the same superview. The touch view receives pan and tap gestures from the user, interprets them, and updates the selection and scrolling of your `UITableView` accordingly.
+ * The touch view uses auto layout.
+ * The touch view is automatically added or removed from the superview when you change the `enabled` property of the `TableViewScrollAndSelectController`. It is also removed when you call `invalidate()`.
+ * By default, the touch view is 60 pixels wide. You can change this by setting the `touchAreaWidth` property to a custom value.
+ * By default, the touch view extends to the top, left, and bottom edges of the superview (not safe area). If you would like it to extend only to the safe area, set `touchViewCoversSafeArea = false`.
+ 
+ **Tapping:** Tapping on the touch view simply selects / deselects that cell as it normally would.
+ 
+ **Panning:** During a pan gesture, the first cell encountered determines if we are selecting or deslecting cells. For example, if the first cell in the pan was currently deselected, the `TableViewScrollAndSelectController` will select it and any other cells that are panned over before ending the pan.
+ 
+ **Changing pan direction:** If the pan changes direction, the `TableViewScrollAndSelectController` will switch from selecting to deselecting, or vice versa.
+ 
+ **Automatic scrolling:** If a pan reaches the top or bottom edge of the `UITableView`, the `TableViewScrollAndSelectController` will automatically begin scrolling the table view and will continue selecting / deselecting until the user lifts their finger, pans in the other direction, or reaches the end of the table view.
+ 
+ **Scrolling speed:** You can customize the speed at which the `UITableView` scrolls by changing the `scrollingSpeed` property. By default, it will scroll 20 rows per second.
+ 
+ **Scrolling anchors:** By default, when a pan gesture reaches the top 40 pixels of the table view, the `TableViewScrollAndSelectController` will automatically begin scrolling up. To change this, set the `topScrollingAnchor` property to a custom value. Likewise, by default, when a pan gesture reaches the bottom 40 pixels of the table view, the `TableViewScrollAndSelectController` will automatically begin scrolling down. To change this, set the `bottomScrollingAnchor` property to a custom value. *Note: You must give this a negative value; by default, the value is -40.0.*
+ 
+ **Estimated row heights:** In order to minimize CPU usage, the `TableViewScrollAndSelectController` uses the `tableView(_:estimatedHeightForRowAt:)` property of your `UITableViewDelegate` when scrolling. This helps to determine the exact speed of the scrolling and which cell to stop at when the user lifts their finger or changes direction. If you do not provide an estimated row height or if your estimated row height is not very accurate, you may find that scrolling does not always stop at the correct point. To get around this issue, you can set `shouldTrustEstimatedRowHeightWhenScrolling = false` to force the `TableViewScrollAndSelectController` to use the actual row height of each cell. This, however, may cause a slight lag in scrolling, depending on how many cells you have and how much rendering each cell is doing. The recommended approach is to set an estimated row height that is as accurate as possible.
+*/
 public class TableViewScrollAndSelectController {
     
     // MARK: - Properties
     public weak var delegate: TableViewScrollAndSelectDelegate?
 
-    public var touchAreaWidth: CGFloat
-    public var touchAreaCoversSafeArea: Bool = true {
+    public var touchViewWidth: CGFloat {
         didSet {
-            setNeedsLayout()
-            layoutIfNeeded()
+            forceLayoutTouchView = true
+            layoutTouchView()
         }
     }
     
-    public var scrollUpBeginningOffset: CGFloat = 40.0
-    public var scrollDownBeginningOffset: CGFloat = -40.0
+    public var touchViewCoversSafeArea: Bool {
+        didSet {
+            forceLayoutTouchView = true
+            layoutTouchView()
+        }
+    }
     
+    public var topScrollingAnchor: CGFloat
+    public var bottomScrollingAnchor: CGFloat
     public var scrollingSpeed: ScrollingSpeed
     
-    public var enabled: Bool = false {
+    public var enabled: Bool {
         didSet {
             if !enabled {
                 invalidate()
             } else {
-                setNeedsLayout()
-                layoutIfNeeded()
+                layoutTouchView()
             }
         }
     }
     
+    // TODO: Print some logs if in debug mode
     public var isInDebugMode: Bool {
         return debugColor != nil
     }
     
-    public var shouldTrustEstimatedRowHeightWhenScrolling: Bool = true
+    public var shouldTrustEstimatedRowHeightWhenScrolling: Bool
     
     private var scrollAnimationDuration: Float {
         
         switch scrollingSpeed {
         case .fast:
-            return 0.025
+            return 1 / 40
         case .moderate:
-            return 0.05
+            return 1 / 20
         case .slow:
-            return 0.1
+            return 1 / 10
         case .custom(let rowsPerSecond):
             return Float(1 / rowsPerSecond)
         }
@@ -66,10 +125,10 @@ public class TableViewScrollAndSelectController {
     
     // The wrapper view is a clear view placed over the left side of the tableview and contains the pan and tap gesture recognizers
     private weak var tableView: UITableView!
-    private var wrapperView: UIView!
+    private var touchView: UIView!
     private var tapGestureRecognizer: UITapGestureRecognizer!
     private var panGestureRecognizer: UIPanGestureRecognizer!
-    private var needsLayout: Bool = false
+    private var forceLayoutTouchView: Bool = true
     private var debugColor: UIColor?
     
     private var currentPanDetails = PanDetails()
@@ -81,18 +140,18 @@ public class TableViewScrollAndSelectController {
     private var panTimerChangeCount: Int = 0
     private var panStartingIndexPath: IndexPath?
     
-    // MARK: - Init
+    // MARK: - Initialization
     public init(tableView: UITableView) {
         
         self.tableView = tableView
-        self.touchAreaWidth = 60.0
-        self.scrollingSpeed = .moderate
-    }
-    
-    public convenience init(tableView: UITableView, touchWidth: CGFloat) {
         
-        self.init(tableView: tableView)
-        self.touchAreaWidth = touchWidth
+        enabled = false
+        scrollingSpeed = .moderate
+        touchViewWidth = 60.0
+        topScrollingAnchor = 40.0
+        bottomScrollingAnchor = -40.0
+        shouldTrustEstimatedRowHeightWhenScrolling = true
+        touchViewCoversSafeArea = true
     }
     
     public convenience init(tableView: UITableView, scrollingSpeed: ScrollingSpeed) {
@@ -101,64 +160,53 @@ public class TableViewScrollAndSelectController {
         self.scrollingSpeed = scrollingSpeed
     }
     
-    public convenience init(tableView: UITableView, touchWidth: CGFloat, scrollingSpeed: ScrollingSpeed) {
-        
-        self.init(tableView: tableView)
-        self.touchAreaWidth = touchWidth
-        self.scrollingSpeed = scrollingSpeed
-    }
-    
     // MARK: - Layout
-    public func setNeedsLayout() {
-        needsLayout = true
-    }
-    
-    public func layoutIfNeeded() {
+    private func layoutTouchView() {
         
-        if tableView.superview == nil || (wrapperView != nil && !needsLayout) {
+        if tableView.superview == nil || (touchView != nil && !forceLayoutTouchView) {
             // If the table view is not added to the hierarchy yet, don't configure
             // Likewise, if we've already been configured, don't configure again
             return
         }
         
-        needsLayout = false
+        forceLayoutTouchView = false
         
-        wrapperView?.removeFromSuperview()
-        wrapperView = UIView()
-        wrapperView.translatesAutoresizingMaskIntoConstraints = false
-        wrapperView?.backgroundColor = debugColor ?? .clear
-        wrapperView?.alpha = 0.5
-        tableView.superview!.addSubview(wrapperView)
+        touchView?.removeFromSuperview()
+        touchView = UIView()
+        touchView.translatesAutoresizingMaskIntoConstraints = false
+        touchView.backgroundColor = debugColor ?? .clear
+        touchView.alpha = 0.5
+        tableView.superview!.addSubview(touchView)
         
-        if touchAreaCoversSafeArea {
-            NSLayoutConstraint.activate([wrapperView.leadingAnchor.constraint(equalTo: tableView.superview!.leadingAnchor, constant: -10.0),
-                                         wrapperView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchAreaWidth),
-                                         wrapperView.bottomAnchor.constraint(equalTo: tableView.superview!.bottomAnchor, constant: 10.0),
-                                         wrapperView.topAnchor.constraint(equalTo: tableView.superview!.topAnchor)])
+        if touchViewCoversSafeArea {
+            NSLayoutConstraint.activate([touchView.leadingAnchor.constraint(equalTo: tableView.superview!.leadingAnchor, constant: -10.0),
+                                         touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
+                                         touchView.bottomAnchor.constraint(equalTo: tableView.superview!.bottomAnchor, constant: 10.0),
+                                         touchView.topAnchor.constraint(equalTo: tableView.superview!.topAnchor)])
         } else {
-            NSLayoutConstraint.activate([wrapperView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
-                                         wrapperView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchAreaWidth),
-                                         wrapperView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
-                                         wrapperView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)])
+            NSLayoutConstraint.activate([touchView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
+                                         touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
+                                         touchView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
+                                         touchView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)])
         }
-        tableView.superview!.bringSubview(toFront: wrapperView)
+        tableView.superview!.bringSubview(toFront: touchView)
         tableView.superview!.layoutIfNeeded()
         
         tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tap))
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.numberOfTouchesRequired = 1
-        wrapperView.addGestureRecognizer(tapGestureRecognizer)
+        touchView.addGestureRecognizer(tapGestureRecognizer)
         
         panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(pan))
         panGestureRecognizer.maximumNumberOfTouches = 1
         panGestureRecognizer.minimumNumberOfTouches = 1
-        wrapperView.addGestureRecognizer(panGestureRecognizer)
+        touchView.addGestureRecognizer(panGestureRecognizer)
     }
     
     public func setDebugMode(on: Bool, color: UIColor = .green) {
         
         debugColor = on ? color : nil
-        wrapperView?.backgroundColor = debugColor ?? .clear
+        touchView?.backgroundColor = debugColor ?? .clear
     }
 
     // MARK: - Memory Management
@@ -168,16 +216,16 @@ public class TableViewScrollAndSelectController {
     
     public func invalidate() {
         
-        if let gesture = tapGestureRecognizer, let gestures = wrapperView?.gestureRecognizers, gestures.contains(gesture) {
-            wrapperView.removeGestureRecognizer(gesture)
+        if let gesture = tapGestureRecognizer, let gestures = touchView?.gestureRecognizers, gestures.contains(gesture) {
+            touchView.removeGestureRecognizer(gesture)
         }
-        if let gesture = panGestureRecognizer, let gestures = wrapperView?.gestureRecognizers, gestures.contains(gesture) {
-            wrapperView.removeGestureRecognizer(gesture)
+        if let gesture = panGestureRecognizer, let gestures = touchView?.gestureRecognizers, gestures.contains(gesture) {
+            touchView.removeGestureRecognizer(gesture)
         }
         tapGestureRecognizer = nil
         panGestureRecognizer = nil
         
-        wrapperView?.removeFromSuperview()
+        touchView?.removeFromSuperview()
         tableView.superview?.layoutIfNeeded()
         
         panTimer?.invalidate()
@@ -383,32 +431,11 @@ public class TableViewScrollAndSelectController {
             // We made it to the end of the table view
             tableView.setContentOffset(destinationOffset, animated: false)
             
-            // Select / deselect final index path
-//            if currentPanDetails.direction == .down {
-//                if let indexPath = getLastIndexPath() {
-//                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
-//                }
-//            } else {
-//                if let indexPath = getFirstIndexPath() {
-//                    changeRowSelection(from: indexPath, numberOfRows: 2, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction == .down ? .up : .down)
-//                }
-//            }
-            
             // Stop timer
             panTimer?.invalidate()
             panTimer = nil
             
         } else {
-            
-//            let rowsPassed = Int(timeRunning / Double(scrollAnimationDuration))
-//            if rowsPassed >= panTimerChangeCount {
-//                // We reached a new index path - time to select / deselect it
-//                if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
-//                    changeRowSelection(from: selectionFromIndexPath, numberOfRows: rowsPassed - panTimerChangeCount, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
-//                    panTimerChangeCount = rowsPassed
-//
-//                }
-//            }
             
             // Scroll the tableview
             let distanceTraveled: CGFloat
@@ -536,33 +563,25 @@ public class TableViewScrollAndSelectController {
         }
     }
     
-    private func isCellAtEdgeOfTableView(at indexPath: IndexPath, direction: PanDirection) -> Bool {
-        
-        let cellRect = tableView.rectForRow(at: indexPath)
-        
-        if direction == .down {
-            return cellRect.origin.y + cellRect.height + 15.0 > tableView.contentOffset.y + tableView.bounds.height - tableView.superview!.safeAreaInsets.top + scrollDownBeginningOffset
-        } else {
-            return cellRect.origin.y - 15.0 < tableView.contentOffset.y + tableView.safeAreaInsets.top + scrollUpBeginningOffset
-        }
-    }
-    
     private func isAtEdgeOfTableView() -> Bool {
         
         let superviewRect = UIEdgeInsetsInsetRect(tableView.superview!.frame, tableView.safeAreaInsets)
         if currentPanDetails.direction == .down {
-            return currentPanDetails.position.y > (superviewRect.origin.y + superviewRect.height) + scrollDownBeginningOffset
+            return currentPanDetails.position.y > (superviewRect.origin.y + superviewRect.height) + bottomScrollingAnchor
         } else {
-            return currentPanDetails.position.y < superviewRect.origin.y + scrollUpBeginningOffset
+            return currentPanDetails.position.y < superviewRect.origin.y + topScrollingAnchor
         }
     }
 }
 
 // MARK: - Delegate Protocol
+/**
+ The delegate of a TableViewScrollAndSelectController must adopt the TableViewScrollAndSelectDelegate protocol. The delegate is notified when the UITableView begins and ends scrolling as a result of a scroll and select action.
+ 
+ To monitor individual row selections, do not use this protocol; instead, override the tableViewDidSelectRowAtIndexPath and tableViewDidDeselectRowAtIndexPath functions in your UITableViewController.
+ */
 public protocol TableViewScrollAndSelectDelegate: class {
-    
-    // Conform to this protocol to monitor when the table view begins and ends scrolling
-    // Override tableViewDidSelectRowAtIndexPath and tableViewDidDeselectRowAtIndexPath in your UITableView subclass to monitor row selections
+
     func tableViewSelectionPanningDidBegin()
     func tableViewSelectionPanningDidEnd()
 }
@@ -570,10 +589,29 @@ public protocol TableViewScrollAndSelectDelegate: class {
 // MARK: - Types
 public extension TableViewScrollAndSelectController {
     
+    /**
+     The speed at which the UITableView will scroll when a user's panning gesture reaches the top or bottom of the view.
+     * fast: 40 rows per second
+     * moderate: 20 rows per second
+     * slow: 10 rows per second
+     * custom: x rows per second
+     */
     public enum ScrollingSpeed {
+        /**
+         The UITableView will scroll 40 rows per second.
+        */
         case fast
+        /**
+         The UITableView will scroll 20 rows per second.
+         */
         case moderate
+        /**
+         The UITableView will scroll 10 rows per second.
+         */
         case slow
+        /**
+         The UITableView will scroll a custom number of rows per second.
+         */
         case custom(rowsPerSecond: Float)
     }
     

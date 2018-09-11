@@ -44,21 +44,6 @@ class ExampleTableViewController: UITableViewController {
         updateNavBarForSelection()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        scrollAndSelectController.setNeedsLayout()
-        scrollAndSelectController.layoutIfNeeded()
-    }
-    
-    override func viewDidLayoutSubviews() {
-        scrollAndSelectController.layoutIfNeeded()
-    }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
-        scrollAndSelectController.setNeedsLayout()
-    }
-    
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
