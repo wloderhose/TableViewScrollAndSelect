@@ -42,7 +42,6 @@ class ExampleTableViewController: UITableViewController {
         navigationItem.rightBarButtonItem = settingsBarButtonItem
         scrollAndSelectController = TableViewScrollAndSelectController(tableView: tableView, scrollingSpeed: .moderate)
         updateNavBarForSelection()
-        scrollAndSelectController.isInDebugMode
     }
     
     override func setEditing(_ editing: Bool, animated: Bool) {
