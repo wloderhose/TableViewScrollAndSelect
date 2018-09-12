@@ -231,21 +231,26 @@ public class TableViewScrollAndSelectController {
     // The touch view is placed over the left side of the table view and receives user tap and pan gestures
     private var touchView: UIView!
     private var forceLayoutTouchView: Bool = true
+    
+    // A custom set of constraints can be assigned to layout the touch view using a closure.
+    // These constraints will be used instead of the default constraints which pin it to the top, left, and bottom edges.
+    private var customConstraintClosure: ((_ touchView: UIView) -> [NSLayoutConstraint]?)? {
+        didSet {
+            forceLayoutTouchView = true
+            layoutTouchView()
+        }
+    }
+    
     private var tapGestureRecognizer: UITapGestureRecognizer!
     private var panGestureRecognizer: UIPanGestureRecognizer!
     
     private var debugColor: UIColor?
     
     private var currentPanDetails = PanDetails()
+    private var currentScrollDetails = ScrollDetails()
     
-    // The pan timer is used to scroll up or down while selecting or deselecting cells
-    private var panTimer: Timer?
-    private var panTimerStartTime: Date?
-    private var panTimerStartOffset: CGPoint?
-    private var panTimerDestinationOffset: CGPoint?
-    private var panTimerDuration: TimeInterval?
-    private var panTimerChangeCount: Int = 0
-    private var panStartingIndexPath: IndexPath?
+    // The timer is used to scroll up or down while selecting or deselecting cells
+    private var scrollTimer: Timer?
     
     // MARK: - Initialization
     
@@ -279,6 +284,36 @@ public class TableViewScrollAndSelectController {
         
         self.init(tableView: tableView)
         self.scrollingSpeed = scrollingSpeed
+    }
+    
+    // MARK: - Layout
+    
+    /**
+     Set custom constraints for the touch view's layout.
+     
+     - Parameters:
+        - closure: A closure that will run immediately after the touch view is added to the view hierarchy. It will return your custom array of constraints and active them in a batch.
+        - touchView: The `UIView` whose constraints you are setting.
+     
+     - Returns: An optional array of constraints. If the closure returns `nil`, then the default `TableViewScrollAndSelect` constraints will be used.
+     
+     - Important: You **must** set the constraints of the touch view relative to a view currently in the view hierarchy. It is recommended that you constrain it to `touchView.superview!` which is also the superview of your `UITableView`. This superivew will always be non-nil at the point when your closure is executed.
+     
+     - Postcondition: After calling this function, the touch view will force a re-layout.
+
+     */
+    public func setCustomConstraints(_ closure: @escaping (_ touchView: UIView) -> [NSLayoutConstraint]?) {
+        customConstraintClosure = closure
+    }
+    
+    /**
+     Clear any custom constraints and force the touch view to re-layout with the `TableViewScrollAndSelect` default constraints.
+     
+     - Postcondition: After calling this function, the touch view will force a re-layout.
+     
+     */
+    public func clearCustomConstraints() {
+        customConstraintClosure = nil
     }
     
     // MARK: - Debug Mode
@@ -322,13 +357,14 @@ public class TableViewScrollAndSelectController {
         touchView?.removeFromSuperview()
         tableView.superview?.layoutIfNeeded()
         
-        panTimer?.invalidate()
-        panTimer = nil
+        scrollTimer?.invalidate()
+        scrollTimer = nil
     }
     
     
 }
 
+// MARK: -
 // MARK: - Delegate Protocol
 
 /**
@@ -349,17 +385,17 @@ public protocol TableViewScrollAndSelectDelegate: class {
     func tableViewSelectionPanningDidBegin()
     
     /**
-     Called when a pan gesture ended.
-     - Note: This can happen for 2 reasons:
-     1. The user lifted their finger.
-     2. The table view scrolled all the way to the top or bottom.
+     Called when a pan gesture ended because the user lifted their finger.
      */
     func tableViewSelectionPanningDidEnd()
 }
 
-// MARK: - Private
+// MARK: -
+// MARK: -
+// MARK: - Internal Code
 private extension TableViewScrollAndSelectController {
     
+    // Convert ScrollingSpeed enum to a Float
     private var scrollAnimationDuration: Float {
         
         switch scrollingSpeed {
@@ -374,8 +410,6 @@ private extension TableViewScrollAndSelectController {
         }
     }
     
-    
-    
     private enum PanDirection {
         case none
         case down
@@ -387,12 +421,13 @@ private extension TableViewScrollAndSelectController {
         case deselecting
     }
     
+    // Package details about the current pan gesture into a single struct
     private struct PanDetails {
         
         var direction: PanDirection = .none
         var mode: PanMode = .selecting
         var position: CGPoint = .zero
-        var isScrolling: Bool = false
+        var indexPath: IndexPath?
         
         mutating func switchSelectionMode() {
             mode = mode == .selecting ? .deselecting : .selecting
@@ -403,39 +438,71 @@ private extension TableViewScrollAndSelectController {
         }
     }
     
+    // Package details about the current scroll animation into a single struct
+    private struct ScrollDetails {
+        
+        var isScrolling: Bool = false
+        var startTime: Date?
+        var startOffset: CGPoint?
+        var destinationOffset: CGPoint?
+        var duration: TimeInterval?
+        var startingIndexPath: IndexPath?
+        var rowsChanged: Int = 0
+    }
+    
     // MARK: - Layout
     
+    // Add the touch view to the table view's superview, assign auto layout constraints, and add gesture recognizers.
     private func layoutTouchView() {
         
         if tableView.superview == nil || (touchView != nil && touchView.superview != nil && !forceLayoutTouchView) {
             // If the table view is not added to the hierarchy yet, don't configure
-            // Likewise, if we've already been configured, don't configure again
+            // Likewise, if we've already been layed out, don't layout again unless we want to force it
             return
         }
         
         forceLayoutTouchView = false
         
+        // Remove touch view from superview if necessary
         touchView?.removeFromSuperview()
+        
+        // Initialize the touch view and set its properties
         touchView = UIView()
         touchView.translatesAutoresizingMaskIntoConstraints = false
         touchView.backgroundColor = debugColor ?? .clear
-        touchView.alpha = 0.5
+        touchView.alpha = 0.5 // Make partially transparent for debug mode
+        
+        // Add touch view to table view's superview
         tableView.superview!.addSubview(touchView)
         
-        if !touchViewRespectsSafeArea {
-            NSLayoutConstraint.activate([touchView.leadingAnchor.constraint(equalTo: tableView.superview!.leadingAnchor, constant: -10.0),
-                                         touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
-                                         touchView.bottomAnchor.constraint(equalTo: tableView.superview!.bottomAnchor, constant: 10.0),
-                                         touchView.topAnchor.constraint(equalTo: tableView.superview!.topAnchor)])
+        if let closure = customConstraintClosure, let customConstraints = closure(touchView), customConstraints.count > 0 {
+            // If custom constraints have been set, use them
+            NSLayoutConstraint.activate(customConstraints)
         } else {
-            NSLayoutConstraint.activate([touchView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
-                                         touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
-                                         touchView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
-                                         touchView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)])
+            // Otherwise, use the default constraints along with the touchViewWidth and touchViewRespectsSafeArea properties
+            
+            if touchViewRespectsSafeArea {
+                NSLayoutConstraint.activate([
+                    touchView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
+                    touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
+                    touchView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
+                    touchView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)
+                ])
+            } else {
+                NSLayoutConstraint.activate([
+                    touchView.leadingAnchor.constraint(equalTo: tableView.superview!.leadingAnchor, constant: -10.0),
+                    touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
+                    touchView.bottomAnchor.constraint(equalTo: tableView.superview!.bottomAnchor, constant: 10.0),
+                    touchView.topAnchor.constraint(equalTo: tableView.superview!.topAnchor)
+                ])
+            }
         }
+        
+        // Make sure touch view is frontmost
         tableView.superview!.bringSubview(toFront: touchView)
         tableView.superview!.layoutIfNeeded()
         
+        // Add gesture recognizers
         tapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(tap))
         tapGestureRecognizer.numberOfTapsRequired = 1
         tapGestureRecognizer.numberOfTouchesRequired = 1
@@ -448,9 +515,10 @@ private extension TableViewScrollAndSelectController {
     }
     
     // MARK: - Tapping
+    
     @objc private func tap() {
-        // Allow cells to be selected / deselected by tapping as usual
         
+        // Allow cells to be selected / deselected by tapping as usual
         if let indexPath = tableView.indexPathForRow(at: tapGestureRecognizer.location(in: tableView)) {
             
             if let selectedIndexPaths = tableView.indexPathsForSelectedRows, selectedIndexPaths.contains(indexPath) {
@@ -462,23 +530,29 @@ private extension TableViewScrollAndSelectController {
     }
     
     // MARK: - Panning
+    
     @objc private func pan() {
-        // When the user pans up or down above the cell selection buttons
+        // Allow panning over the touch view to trigger scroll and select functionality
         
         if panGestureRecognizer.state == .began {
+            // A pan gesture just began
             
             // Notify the delegate
             delegate?.tableViewSelectionPanningDidBegin()
             
             // Refresh panning details
             currentPanDetails = PanDetails()
+            
+            // Save the new panning position (NOTE: it is relative to the superview not the table view)
             currentPanDetails.position = panGestureRecognizer.location(in: tableView.superview!)
             
-            // Select / Deselect row
-            if let indexPath = tableView.indexPathForRow(at: tableView.superview!.convert(currentPanDetails.position, to: tableView)) {
+            // Select / Deselect current row
+            if let indexPath = getIndexPathAtSuperviewPosition(currentPanDetails.position) {
                 
-                panStartingIndexPath = indexPath
+                // Remember where the pan started
+                currentPanDetails.indexPath = indexPath
                 
+                // Determine if we are doing a mass selection or deselection
                 if let selectedIndexPaths = tableView.indexPathsForSelectedRows, selectedIndexPaths.contains(indexPath) {
                     currentPanDetails.mode = .deselecting
                     changeRowSelection(at: indexPath, select: false)
@@ -489,19 +563,22 @@ private extension TableViewScrollAndSelectController {
             }
             
         } else if panGestureRecognizer.state == .changed {
+            // The current pan gesture changed position
             
+            // Save the new position (NOTE: it is relative to the superview not the table view)
             let newPanningPosition = panGestureRecognizer.location(in: tableView.superview!)
             
+            // Don't worry about small changes
             if fabs(newPanningPosition.y - currentPanDetails.position.y) < 5.0 {
-                // Don't worry about minute changes
                 return
             }
             
+            // Determine the panning direction and if that direction just changed
             let isPanningDown = newPanningPosition.y > currentPanDetails.position.y
             let directionChanged = (isPanningDown && currentPanDetails.direction == .up) || (!isPanningDown && currentPanDetails.direction == .down)
             
-            if currentPanDetails.isScrolling && !directionChanged {
-                // Is we are scrolling up or down and the direction of the pan gesture did not change, don't do anything.
+            if currentScrollDetails.isScrolling && !directionChanged {
+                // If we are scrolling up or down and the direction of the pan gesture did not change, don't do anything.
                 // Just allow the scroll timer to continue scrolling and selecting.
                 // We don't even want to save the new position, because we don't want to stop scrolling unless the pan
                 // position reaches the point at which it began scrolling.
@@ -513,17 +590,18 @@ private extension TableViewScrollAndSelectController {
             currentPanDetails.position = newPanningPosition
             currentPanDetails.direction = isPanningDown ? .down : .up
             
-            guard let indexPath = tableView.indexPathForRow(at: tableView.superview!.convert(currentPanDetails.position, to: tableView)) else {
+            guard let indexPath = getIndexPathAtSuperviewPosition(currentPanDetails.position) else {
                 return
             }
             
             if directionChanged {
+                // The pan direction just changed
                 
-                if currentPanDetails.isScrolling {
+                if currentScrollDetails.isScrolling {
                     // Stop scrolling
-                    currentPanDetails.isScrolling = false
-                    panTimer?.invalidate()
-                    panTimer = nil
+                    currentScrollDetails.isScrolling = false
+                    scrollTimer?.invalidate()
+                    scrollTimer = nil
                 }
                 
                 // Switch selection mode
@@ -531,13 +609,17 @@ private extension TableViewScrollAndSelectController {
                 
                 // Update selection for index path that the pan gesture changed direction over
                 changeRowSelection(at: indexPath, select: currentPanDetails.isSelecting)
-                panStartingIndexPath = indexPath
                 
-                //            } else if !isCellAtEdgeOfTableView(at: indexPath, direction: currentPanDetails.direction) {
+                // Remember where the direction change started
+                currentPanDetails.indexPath = indexPath
+                
             } else if !isAtEdgeOfTableView() {
+                // The direction has not changed and we do not need to scroll
                 
-                // Update selection for index path that the pan gesture changed direction over
-                if let starting = panStartingIndexPath {
+                // Update selection for index path that the pan gesture just passed over
+                if let starting = currentPanDetails.indexPath {
+                    
+                    // Sometimes, for very fast panning speeds, we need to select multiple cells at a time in order to catch up with the user's finger
                     let rowsMissed: Int
                     if currentPanDetails.direction == .down {
                         rowsMissed = getNumberOfRowsBetween(firstIndexPath: starting, secondIndexPath: indexPath)
@@ -545,37 +627,45 @@ private extension TableViewScrollAndSelectController {
                         rowsMissed = getNumberOfRowsBetween(firstIndexPath: indexPath, secondIndexPath: starting)
                     }
                     if rowsMissed > 1 {
-                        changeRowSelection(from: indexPath, numberOfRows: rowsMissed, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
+                        changeRowSelection(from: indexPath,
+                                           numberOfRows: rowsMissed,
+                                           select: currentPanDetails.isSelecting,
+                                           direction: currentPanDetails.direction)
                     } else {
                         changeRowSelection(at: indexPath, select: currentPanDetails.isSelecting)
                     }
                 }
                 
-                panStartingIndexPath = indexPath
+                // Update the current indexPath so we know which rows have been correctly selected / deselected
+                currentPanDetails.indexPath = indexPath
                 
             } else {
+                // We have reached the top or bottom edge of the table view - we need to begin scrolling
                 
-                // We need to begin scrolling
-                currentPanDetails.isScrolling = true
-                panStartingIndexPath = indexPath
-                panTimerChangeCount = 0
-                panTimerStartOffset = tableView.contentOffset
+                // Refresh the scrolling details
+                currentScrollDetails = ScrollDetails()
+                currentScrollDetails.isScrolling = true
                 
+                // Remember which index path the scrolling began at
+                currentScrollDetails.startingIndexPath = indexPath
+                
+                // Get the current content offset
+                currentScrollDetails.startOffset = tableView.contentOffset
+                
+                // Compute the destination offset in order to reach the very end of the table view
                 let destinationIndexPath: IndexPath?
                 
                 if currentPanDetails.direction == .down {
-                    // Scrolling down
-                    panTimerDestinationOffset = CGPoint(x: tableView.contentOffset.x, y: tableView.contentSize.height - tableView.bounds.height)
+                    currentScrollDetails.destinationOffset = CGPoint(x: tableView.contentOffset.x, y: tableView.contentSize.height - tableView.bounds.height)
                     destinationIndexPath = getLastIndexPath()
                 } else {
-                    // Scrolling up
-                    panTimerDestinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.safeAreaInsets.top)
+                    currentScrollDetails.destinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.safeAreaInsets.top)
                     destinationIndexPath = getFirstIndexPath()
                 }
                 
                 if let destination = destinationIndexPath {
                     
-                    // Determine how many rows we need to scroll to get to the top/bottom
+                    // Determine how many rows we need to scroll to the top/bottom
                     let rowsToScroll: Float
                     if currentPanDetails.direction == .down {
                         rowsToScroll = Float(getNumberOfRowsBetween(firstIndexPath: indexPath, secondIndexPath: destination))
@@ -583,24 +673,28 @@ private extension TableViewScrollAndSelectController {
                         rowsToScroll = Float(getNumberOfRowsBetween(firstIndexPath: destination, secondIndexPath: indexPath))
                     }
                     
-                    panTimerStartTime = Date()
-                    panTimerDuration = TimeInterval(rowsToScroll * scrollAnimationDuration)
+                    // Remember the start time of the scroll
+                    currentScrollDetails.startTime = Date()
                     
-                    // Begin the timer
-                    panTimer = Timer.scheduledTimer(timeInterval: 0.001,
-                                                    target: self,
-                                                    selector: #selector(scrollAndSelect),
-                                                    userInfo: nil,
-                                                    repeats: true)
+                    // Compute the total duration needed to scroll to the top/bottom
+                    currentScrollDetails.duration = TimeInterval(rowsToScroll * scrollAnimationDuration)
+                    
+                    // Start the timer
+                    scrollTimer = Timer.scheduledTimer(timeInterval: 0.001,
+                                                       target: self,
+                                                       selector: #selector(scrollAndSelect),
+                                                       userInfo: nil,
+                                                       repeats: true)
                 }
             }
             
         } else if panGestureRecognizer.state == .ended || panGestureRecognizer.state == .cancelled {
+            // The user lifted their finger from a pan gesture
             
-            // End scrolling animation
-            currentPanDetails.isScrolling = false
-            panTimer?.invalidate()
-            panTimer = nil
+            // End the scrolling animation and timer
+            currentScrollDetails.isScrolling = false
+            scrollTimer?.invalidate()
+            scrollTimer = nil
             
             // Notify delegate
             delegate?.tableViewSelectionPanningDidEnd()
@@ -608,68 +702,88 @@ private extension TableViewScrollAndSelectController {
     }
     
     @objc private func scrollAndSelect() {
-        // Called by the panning timer every 0.01 seconds during a scroll and select animation
+        // Called by the panning timer every 0.001 seconds during a scroll and select animation
         
-        if !currentPanDetails.isScrolling {
-            panTimer?.invalidate()
-            panTimer = nil
+        if !currentScrollDetails.isScrolling {
+            // Stop scrolling if something user lifted their finger or we got invalidated for any reason
+            scrollTimer?.invalidate()
+            scrollTimer = nil
             return
         }
         
-        let timeRunning: TimeInterval = -panTimerStartTime!.timeIntervalSinceNow
+        let timeRunning: TimeInterval = -currentScrollDetails.startTime!.timeIntervalSinceNow
         
+        // If we're using estimated row heights, the destiation offset has already been calculated when we started the scroll
+        // Otherwise, we have to calculate the destination offset each time we reach a new row
         let destinationOffset: CGPoint
         if shouldUseEstimatedRowHeightWhenScrolling {
-            destinationOffset = panTimerDestinationOffset!
+            destinationOffset = currentScrollDetails.destinationOffset!
         } else if currentPanDetails.direction == .down {
-            // Scrolling down
             destinationOffset = CGPoint(x: tableView.contentOffset.x, y: tableView.contentSize.height - tableView.bounds.height)
         } else {
-            // Scrolling up
             destinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.safeAreaInsets.top)
         }
         
+        // Determine how many rows have been passed so that we can select / deselect them
         let rowsPassed = Int(timeRunning / Double(scrollAnimationDuration)) + 1
-        if rowsPassed >= panTimerChangeCount {
-            // We reached a new index path - time to select / deselect it
-            if let selectionFromIndexPath = getRowInTableViewOffsetFrom(indexPath: panStartingIndexPath!, by: currentPanDetails.direction == .down ? panTimerChangeCount : -panTimerChangeCount) {
-                changeRowSelection(from: selectionFromIndexPath, numberOfRows: rowsPassed - panTimerChangeCount, select: currentPanDetails.isSelecting, direction: currentPanDetails.direction)
-                panTimerChangeCount = rowsPassed
+        if rowsPassed >= currentScrollDetails.rowsChanged {
+            
+            // We reached a new index path - time to select / deselect it and any others we may have missed
+            if let selectionFromIndexPath = getIndexPathOffsetFrom(indexPath: currentPanDetails.indexPath!,
+                                                                        by: currentScrollDetails.rowsChanged * (currentPanDetails.direction == .down ? 1 : -1)) {
                 
+                changeRowSelection(from: selectionFromIndexPath,
+                                   numberOfRows: rowsPassed - currentScrollDetails.rowsChanged,
+                                   select: currentPanDetails.isSelecting,
+                                   direction: currentPanDetails.direction)
+                
+                currentScrollDetails.rowsChanged = rowsPassed
             }
         }
         
-        if timeRunning >= panTimerDuration! {
-            
-            changeRowSelection(at: currentPanDetails.direction == .down ? getLastIndexPath()! : getFirstIndexPath()!, select: currentPanDetails.isSelecting)
-            
+        if timeRunning >= currentScrollDetails.duration! {
             // We made it to the end of the table view
+            
+            // Select / deselect any cells we may have missed
+            changeRowSelection(at: currentPanDetails.direction == .down ? getLastIndexPath()! : getFirstIndexPath()!,
+                               select: currentPanDetails.isSelecting)
+            
+            // Scroll the table view to the very edge
             tableView.setContentOffset(destinationOffset, animated: false)
             
             // Stop timer
-            panTimer?.invalidate()
-            panTimer = nil
+            scrollTimer?.invalidate()
+            scrollTimer = nil
             
         } else {
+            // We have not yet reached the end of the table view
             
-            // Scroll the tableview
             let distanceTraveled: CGFloat
             let newOffset: CGPoint
             
+            // Calculate how far we have traveled and how far the next scroll should take us
             if currentPanDetails.direction == .down {
-                distanceTraveled = (destinationOffset.y - panTimerStartOffset!.y) * CGFloat(timeRunning / panTimerDuration!)
-                newOffset = CGPoint(x: tableView.contentOffset.x, y: panTimerStartOffset!.y + distanceTraveled)
+                distanceTraveled = (destinationOffset.y - currentScrollDetails.startOffset!.y) * CGFloat(timeRunning / currentScrollDetails.duration!)
+                newOffset = CGPoint(x: tableView.contentOffset.x, y: currentScrollDetails.startOffset!.y + distanceTraveled)
             } else {
-                distanceTraveled = fabs(panTimerStartOffset!.y - panTimerDestinationOffset!.y) * CGFloat(timeRunning / panTimerDuration!)
-                newOffset = CGPoint(x: tableView.contentOffset.x, y: panTimerStartOffset!.y - distanceTraveled)
+                distanceTraveled = fabs(currentScrollDetails.startOffset!.y - currentScrollDetails.destinationOffset!.y) * CGFloat(timeRunning / currentScrollDetails.duration!)
+                newOffset = CGPoint(x: tableView.contentOffset.x, y: currentScrollDetails.startOffset!.y - distanceTraveled)
             }
             
+            // Scroll the tableview
             tableView.setContentOffset(newOffset, animated: false)
         }
         
     }
     
     // MARK: - Helper Functions
+    
+    // Convert a CGPoint relative to the superview to a CGPoint relative to the table view and then grab the index path at that point
+    private func getIndexPathAtSuperviewPosition(_ superviewPosition: CGPoint) -> IndexPath? {
+        return tableView.indexPathForRow(at: tableView.superview!.convert(superviewPosition, to: tableView))
+    }
+    
+    // Calculate the number of rows between two index paths
     private func getNumberOfRowsBetween(firstIndexPath first: IndexPath, secondIndexPath second: IndexPath) -> Int {
         
         var diff = 0
@@ -688,6 +802,7 @@ private extension TableViewScrollAndSelectController {
         return diff
     }
     
+    // Get the first index path in the table view
     private func getFirstIndexPath() -> IndexPath? {
         
         var section = 0
@@ -704,6 +819,7 @@ private extension TableViewScrollAndSelectController {
         return nil
     }
     
+    // Get the last index path in the table view
     private func getLastIndexPath() -> IndexPath? {
         
         var section = tableView.numberOfSections - 1
@@ -719,7 +835,8 @@ private extension TableViewScrollAndSelectController {
         return nil
     }
     
-    private func getRowInTableViewOffsetFrom(indexPath: IndexPath, by offset: Int) -> IndexPath? {
+    // Find an index path in the table view offset from a give index path by a specific number of rows
+    private func getIndexPathOffsetFrom(indexPath: IndexPath, by offset: Int) -> IndexPath? {
         
         if offset == 0 {
             return indexPath
@@ -750,6 +867,7 @@ private extension TableViewScrollAndSelectController {
         
     }
     
+    // Change the selection of multiple rows in the table view
     private func changeRowSelection(from fromIndexPath: IndexPath, numberOfRows: Int, select: Bool, direction: PanDirection) {
         
         var indexPath = fromIndexPath
@@ -757,7 +875,7 @@ private extension TableViewScrollAndSelectController {
         while count < numberOfRows {
             
             changeRowSelection(at: indexPath, select: select)
-            if let nextIndexPath = getRowInTableViewOffsetFrom(indexPath: indexPath, by: direction == .down ? 1 : -1) {
+            if let nextIndexPath = getIndexPathOffsetFrom(indexPath: indexPath, by: direction == .down ? 1 : -1) {
                 indexPath = nextIndexPath
             } else {
                 return
@@ -767,6 +885,7 @@ private extension TableViewScrollAndSelectController {
         }
     }
     
+    // Change the selection of one row in the table view and notify the UITableViewDelegate
     private func changeRowSelection(at indexPath: IndexPath, select: Bool) {
         
         if select && (tableView.indexPathsForSelectedRows == nil || !tableView.indexPathsForSelectedRows!.contains(indexPath)) {
@@ -778,6 +897,7 @@ private extension TableViewScrollAndSelectController {
         }
     }
     
+    // Calculate if the current pan gesture has reached the edge of the table view or not
     private func isAtEdgeOfTableView() -> Bool {
         
         let superviewRect = UIEdgeInsetsInsetRect(tableView.superview!.frame, tableView.safeAreaInsets)
