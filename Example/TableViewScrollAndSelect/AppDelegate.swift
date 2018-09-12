@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  TableViewScrollAndSelect
+//  TableViewScrollAndSelect_Example
 //
 //  Created by Will Loderhose on 08/31/2018.
 //  Copyright (c) 2018 wloderhose. All rights reserved.

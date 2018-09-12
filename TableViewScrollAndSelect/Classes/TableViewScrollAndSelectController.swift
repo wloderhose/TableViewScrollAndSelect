@@ -18,6 +18,8 @@ import UIKit
  
  * Your `UITableView` must allow multiple selection during editing and enable scrolling.
  
+ * In order for a cell to be selectable while editing, you must return `true` from the `tableView(_:canEditRowAt:)` function in your `UITableViewDataSource`.
+ 
  * If you are having trouble getting the table view to end scrolling at the correct point, refer to the section about estimated row heights at the end of this description.
  
  # Example Usage

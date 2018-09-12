@@ -2,11 +2,10 @@
 //  ExampleSettingsViewController.swift
 //  TableViewScrollAndSelect_Example
 //
-//  Created by Will Loderhose on 9/5/18.
+//  Created by Will Loderhose on 8/31/18.
 //  Copyright © 2018 CocoaPods. All rights reserved.
 //
 
-import UIKit
 import TableViewScrollAndSelect
 
 protocol ExampleSettingsViewDelegate: class {
@@ -30,6 +29,7 @@ class ExampleSettingsViewController: UIViewController {
     @IBOutlet weak var customSpeedLabel: UILabel!
     @IBOutlet weak var customSpeedPickerView: UIPickerView!
     
+    // MARK: - Load
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -57,6 +57,7 @@ class ExampleSettingsViewController: UIViewController {
         updateEnabledState()
     }
     
+    // MARK: - Actions
     @IBAction func scrollingSpeedChanged(_ sender: Any) {
         
         let speed: TableViewScrollAndSelectController.ScrollingSpeed
@@ -106,6 +107,7 @@ class ExampleSettingsViewController: UIViewController {
 
 }
 
+// MARK: - Picker View data source / delegate
 extension ExampleSettingsViewController: UIPickerViewDelegate, UIPickerViewDataSource {
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {

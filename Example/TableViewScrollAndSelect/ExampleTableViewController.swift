@@ -32,20 +32,29 @@ class ExampleTableViewController: UITableViewController {
         tableView.allowsMultipleSelectionDuringEditing = true
         tableView.isScrollEnabled = true
         
+        // Instantiate TableViewScrollAndSelectController
+        scrollAndSelectController = TableViewScrollAndSelectController(tableView: tableView, scrollingSpeed: .moderate)
+
+        // Set up dummy cells
+        reloadCells()
+        
+        // Configure navigation bar
         settingsBarButtonItem = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
         debugBarButtonItem = UIBarButtonItem(title: "Debug", style: .plain, target: self, action: #selector(toggleDebugMode))
-        
-        reloadCells()
         navigationItem.leftBarButtonItem = self.editButtonItem
         navigationItem.rightBarButtonItem = settingsBarButtonItem
-        scrollAndSelectController = TableViewScrollAndSelectController(tableView: tableView, scrollingSpeed: .moderate)
         updateNavBarForSelection()
     }
     
+    // MARK: - Actions
     override func setEditing(_ editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
+        // Enabled the TableViewScrollAndSelectController when editing and disable it when not editing
         scrollAndSelectController.enabled = editing
+        
+        
+        // Update navigation button items
         navigationItem.rightBarButtonItem = editing ? debugBarButtonItem : settingsBarButtonItem
     }
     
@@ -55,7 +64,10 @@ class ExampleTableViewController: UITableViewController {
     
     @objc private func showSettings(_ sender: Any) {
         
+        // End editing
         self.setEditing(false, animated: true)
+        
+        // Push the settings view controller
         let settingsVC = storyboard!.instantiateViewController(withIdentifier: "ExampleSettingsViewController") as! ExampleSettingsViewController
         settingsVC.delegate = self
         navigationController!.pushViewController(settingsVC, animated: true)
@@ -63,6 +75,7 @@ class ExampleTableViewController: UITableViewController {
     
     private func reloadCells() {
         
+        // Create some dummy cells
         cells.removeAll()
         for section in 0..<sectionCount {
             for row in 0..<rowCount {
@@ -79,6 +92,7 @@ class ExampleTableViewController: UITableViewController {
     
     private func updateNavBarForSelection() {
         
+        // Display the current number of selected cells in the navigation bar
         if isEditing {
             let selectionCount = tableView.indexPathsForSelectedRows?.count ?? 0
             navigationItem.title = "\(selectionCount) selected"
@@ -103,6 +117,7 @@ class ExampleTableViewController: UITableViewController {
         return cell
     }
     
+    // IMPORTANT: Rows cannot be selected if you do not return true
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
     }
@@ -129,6 +144,7 @@ class ExampleTableViewController: UITableViewController {
     }
 }
 
+// MARK: - Settings Delegate
 extension ExampleTableViewController: ExampleSettingsViewDelegate {
     
     func settingsDidChangeSectionCount(count: Int) {
