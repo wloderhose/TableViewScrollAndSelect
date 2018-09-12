@@ -6,21 +6,17 @@
 //  Copyright © 2018 CocoaPods. All rights reserved.
 //
 
-import UIKit
 import TableViewScrollAndSelect
 
 class ExampleTableViewController: UITableViewController {
     
     // MARK: - Properties
+    private var scrollAndSelectController: TableViewScrollAndSelectController!
     private var settingsBarButtonItem: UIBarButtonItem!
     private var debugBarButtonItem: UIBarButtonItem!
-    
     private var sectionCount = 4
     private var rowCount = 25
     private var cells = [[Int]]()
-    private var scrollAndSelectController: TableViewScrollAndSelectController!
-    private var refreshButton: UIBarButtonItem!
-    private var deleteButton: UIBarButtonItem!
     
     // MARK: - Memory Management
     deinit {
@@ -28,11 +24,13 @@ class ExampleTableViewController: UITableViewController {
         scrollAndSelectController = nil
     }
     
+    // MARK: - Load
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // IMPORTANT
         tableView.allowsMultipleSelectionDuringEditing = true
+        tableView.isScrollEnabled = true
         
         settingsBarButtonItem = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(showSettings))
         debugBarButtonItem = UIBarButtonItem(title: "Debug", style: .plain, target: self, action: #selector(toggleDebugMode))

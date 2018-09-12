@@ -3,7 +3,7 @@
 //  TableViewScrollAndSelect
 //
 //  Created by Will Loderhose on 8/31/2018.
-//  Copyright © 2018 Will Loderhose. All rights reserved.
+//  Copyright © 2018 CocoaPods. All rights reserved.
 //
 
 import UIKit
@@ -87,9 +87,6 @@ import UIKit
  # Author
  Will Loderhose
  
- # Copyright
- Copyright © 2018 by Will Loderhose.
- 
 */
 public class TableViewScrollAndSelectController {
     
@@ -130,10 +127,12 @@ public class TableViewScrollAndSelectController {
      */
     public var enabled: Bool {
         didSet {
-            if !enabled {
-                invalidate()
-            } else {
+            if enabled {
                 layoutTouchView()
+                printDebugMessage("ENABLED")
+            } else {
+                invalidate()
+                printDebugMessage("DISABLED")
             }
         }
     }
@@ -252,6 +251,9 @@ public class TableViewScrollAndSelectController {
     // The timer is used to scroll up or down while selecting or deselecting cells
     private var scrollTimer: Timer?
     
+    // For debug logs
+    private var debugLogDateFormatter: DateFormatter
+    
     // MARK: - Initialization
     
     /**
@@ -271,6 +273,10 @@ public class TableViewScrollAndSelectController {
         bottomScrollingAnchor = -40.0
         shouldUseEstimatedRowHeightWhenScrolling = true
         touchViewRespectsSafeArea = false
+        
+        debugLogDateFormatter = DateFormatter()
+        debugLogDateFormatter.timeZone = TimeZone.current
+        debugLogDateFormatter.dateFormat = "dd-MM-yyyy HH:mm:ss.SSSS"
     }
     
     /**
@@ -297,10 +303,24 @@ public class TableViewScrollAndSelectController {
      
      - Returns: An optional array of constraints. If the closure returns `nil`, then the default `TableViewScrollAndSelect` constraints will be used.
      
-     - Important: You **must** set the constraints of the touch view relative to a view currently in the view hierarchy. It is recommended that you constrain it to `touchView.superview!` which is also the superview of your `UITableView`. This superivew will always be non-nil at the point when your closure is executed.
+     - Important: You **must** set the constraints of the touch view relative to a view currently in the view hierarchy. It is recommended that you constrain it to `touchView.superview!` which is also the superview of your `UITableView`. This superivew will always be non-nil at the point when your closure is executed. You must also make sure to set a sufficient number of constraints as to avoid ambiguity.
      
      - Postcondition: After calling this function, the touch view will force a re-layout.
-
+     
+     - Remark: If you set custom constraints, the `touchViewWidth` and `touchViewRespectsSafeArea` properties will be ignored.
+     
+     # Example
+     ```
+     // Make the touch view span across the entire superview
+     scrollAndSelectController.setCustomConstraints { (touchView) -> [NSLayoutConstraint]? in
+         return [
+             touchView.leadingAnchor.constraint(equalTo: touchView.superview!.leadingAnchor),
+             touchView.trailingAnchor.constraint(equalTo: touchView.superview!.trailingAnchor),
+             touchView.topAnchor.constraint(equalTo: touchView.superview!.topAnchor),
+             touchView.bottomAnchor.constraint(equalTo: touchView.superview!.bottomAnchor),
+         ]
+     }
+     ```
      */
     public func setCustomConstraints(_ closure: @escaping (_ touchView: UIView) -> [NSLayoutConstraint]?) {
         customConstraintClosure = closure
@@ -329,8 +349,15 @@ public class TableViewScrollAndSelectController {
      */
     public func setDebugMode(on: Bool, color: UIColor = .green) {
         
-        debugColor = on ? color : nil
-        touchView?.backgroundColor = debugColor ?? .clear
+        if on {
+            debugColor = color
+            touchView?.backgroundColor = color
+            printDebugMessage("DEBUG MODE ON")
+        } else {
+            printDebugMessage("DEBUG MODE OFF")
+            debugColor = nil
+            touchView?.backgroundColor = .clear
+        }
     }
 
     // MARK: - Memory Management
@@ -359,9 +386,9 @@ public class TableViewScrollAndSelectController {
         
         scrollTimer?.invalidate()
         scrollTimer = nil
+        
+        printDebugMessage("INVALIDATED")
     }
-    
-    
 }
 
 // MARK: -
@@ -436,6 +463,35 @@ private extension TableViewScrollAndSelectController {
         var isSelecting: Bool {
             return mode == .selecting
         }
+        
+        var description: String {
+            
+            var str = ""
+            
+            switch direction {
+            case .down:
+                str += "   direction: down\n"
+            case .up:
+                str += "   direction: up\n"
+            case .none:
+                str += "   direction: none\n"
+            }
+            
+            switch mode {
+            case .selecting:
+                str += "   mode: selecting\n"
+            case .deselecting:
+                str += "   mode: deselecting\n"
+            }
+            
+            str += "   position: \(position)"
+            
+            if let indexPath = indexPath {
+                str += "\n   indexPath: \(indexPath)"
+            }
+            
+            return str
+        }
     }
     
     // Package details about the current scroll animation into a single struct
@@ -448,6 +504,37 @@ private extension TableViewScrollAndSelectController {
         var duration: TimeInterval?
         var startingIndexPath: IndexPath?
         var rowsChanged: Int = 0
+        
+        var description: String {
+            
+            var str = ""
+            
+            str += "    isScrolling: \(isScrolling)\n"
+            
+            if let startTime = startTime {
+                str += "    startTime: \(startTime)\n"
+            }
+            
+            if let startOffset = startOffset {
+                str += "    startOffset: \(startOffset)\n"
+            }
+
+            if let startingIndexPath = startingIndexPath {
+                str += "    startingIndexPath: \(startingIndexPath)\n"
+            }
+            
+            if let destinationOffset = destinationOffset {
+                str += "    destinationOffset: \(destinationOffset)\n"
+            }
+            
+            if let duration = duration {
+                str += "    duration: \(duration)\n"
+            }
+            
+            str += "    rowsChanged: \(rowsChanged)"
+            
+            return str
+        }
     }
     
     // MARK: - Layout
@@ -478,24 +565,30 @@ private extension TableViewScrollAndSelectController {
         if let closure = customConstraintClosure, let customConstraints = closure(touchView), customConstraints.count > 0 {
             // If custom constraints have been set, use them
             NSLayoutConstraint.activate(customConstraints)
+            printDebugMessage("LAYED OUT WITH CUSTOM CONSTRAINTS:", object: customConstraints)
         } else {
             // Otherwise, use the default constraints along with the touchViewWidth and touchViewRespectsSafeArea properties
             
+            let constraints: [NSLayoutConstraint]
             if touchViewRespectsSafeArea {
-                NSLayoutConstraint.activate([
+                constraints = [
                     touchView.leadingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: -10.0),
                     touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
                     touchView.bottomAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.bottomAnchor, constant: 10.0),
                     touchView.topAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.topAnchor)
-                ])
+                ]
             } else {
-                NSLayoutConstraint.activate([
+                constraints = [
                     touchView.leadingAnchor.constraint(equalTo: tableView.superview!.leadingAnchor, constant: -10.0),
                     touchView.trailingAnchor.constraint(equalTo: tableView.superview!.layoutMarginsGuide.leadingAnchor, constant: touchViewWidth),
                     touchView.bottomAnchor.constraint(equalTo: tableView.superview!.bottomAnchor, constant: 10.0),
                     touchView.topAnchor.constraint(equalTo: tableView.superview!.topAnchor)
-                ])
+                ]
             }
+            
+            NSLayoutConstraint.activate(constraints)
+            
+            printDebugMessage("LAYED OUT WITH DEFAULT CONSTRAINTS:", object: constraints)
         }
         
         // Make sure touch view is frontmost
@@ -529,13 +622,14 @@ private extension TableViewScrollAndSelectController {
         }
     }
     
-    // MARK: - Panning
+    // MARK: - Panning & Scrolling
     
     @objc private func pan() {
         // Allow panning over the touch view to trigger scroll and select functionality
         
         if panGestureRecognizer.state == .began {
             // A pan gesture just began
+            
             
             // Notify the delegate
             delegate?.tableViewSelectionPanningDidBegin()
@@ -562,6 +656,8 @@ private extension TableViewScrollAndSelectController {
                 }
             }
             
+            printDebugMessage("BEGAN PANNING:", object: currentPanDetails.description)
+            
         } else if panGestureRecognizer.state == .changed {
             // The current pan gesture changed position
             
@@ -583,6 +679,7 @@ private extension TableViewScrollAndSelectController {
                 // We don't even want to save the new position, because we don't want to stop scrolling unless the pan
                 // position reaches the point at which it began scrolling.
                 // In other words, if the user moves their finger minutely in the opposite direction, don't stop the scroll.
+                printDebugMessage("PANNING POSITION CHANGED BUT IGNORED BECAUSE IT WAS LESS THAN 5.0 PIXELS")
                 return
             }
             
@@ -591,6 +688,7 @@ private extension TableViewScrollAndSelectController {
             currentPanDetails.direction = isPanningDown ? .down : .up
             
             guard let indexPath = getIndexPathAtSuperviewPosition(currentPanDetails.position) else {
+                printDebugMessage("COULD NOT FIND INDEX PATH WHILE PANNING:", object: currentPanDetails.description)
                 return
             }
             
@@ -612,6 +710,8 @@ private extension TableViewScrollAndSelectController {
                 
                 // Remember where the direction change started
                 currentPanDetails.indexPath = indexPath
+                
+                printDebugMessage("DIRECTION CHANGED WHILE PANNING:", object: currentPanDetails.description)
                 
             } else if !isAtEdgeOfTableView() {
                 // The direction has not changed and we do not need to scroll
@@ -639,6 +739,8 @@ private extension TableViewScrollAndSelectController {
                 // Update the current indexPath so we know which rows have been correctly selected / deselected
                 currentPanDetails.indexPath = indexPath
                 
+                printDebugMessage("CONTINUED PANNING IN SAME DIRECTION", object: currentPanDetails.description)
+                
             } else {
                 // We have reached the top or bottom edge of the table view - we need to begin scrolling
                 
@@ -659,7 +761,7 @@ private extension TableViewScrollAndSelectController {
                     currentScrollDetails.destinationOffset = CGPoint(x: tableView.contentOffset.x, y: tableView.contentSize.height - tableView.bounds.height)
                     destinationIndexPath = getLastIndexPath()
                 } else {
-                    currentScrollDetails.destinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.safeAreaInsets.top)
+                    currentScrollDetails.destinationOffset = CGPoint(x: tableView.contentOffset.x, y: -tableView.frame.origin.y)
                     destinationIndexPath = getFirstIndexPath()
                 }
                 
@@ -685,6 +787,11 @@ private extension TableViewScrollAndSelectController {
                                                        selector: #selector(scrollAndSelect),
                                                        userInfo: nil,
                                                        repeats: true)
+                    
+                    printDebugMessage("BEGAN SCROLLING:", object: currentPanDetails.description)
+                    
+                } else {
+                    printDebugMessage("COULD NOT BEGIN SCROLLING BECAUSE destinationIndexPath COULD NOT BE COMPUTED", object: currentPanDetails.description)
                 }
             }
             
@@ -698,6 +805,8 @@ private extension TableViewScrollAndSelectController {
             
             // Notify delegate
             delegate?.tableViewSelectionPanningDidEnd()
+            
+            printDebugMessage("ENDED PANNING:", object: currentPanDetails.description)
         }
     }
     
@@ -708,6 +817,7 @@ private extension TableViewScrollAndSelectController {
             // Stop scrolling if something user lifted their finger or we got invalidated for any reason
             scrollTimer?.invalidate()
             scrollTimer = nil
+            printDebugMessage("SCROLLING INTERRUPTED:", object: "\(currentPanDetails.description)\n\(currentScrollDetails.description)\ncurrentContnetOffset: \(tableView.contentOffset)")
             return
         }
         
@@ -755,6 +865,8 @@ private extension TableViewScrollAndSelectController {
             scrollTimer?.invalidate()
             scrollTimer = nil
             
+            printDebugMessage("SCROLLING REACHED END OF TABLE VIEW:", object: "\(currentPanDetails.description)\n\(currentScrollDetails.description)\ncurrentContnetOffset: \(tableView.contentOffset)")
+            
         } else {
             // We have not yet reached the end of the table view
             
@@ -772,6 +884,8 @@ private extension TableViewScrollAndSelectController {
             
             // Scroll the tableview
             tableView.setContentOffset(newOffset, animated: false)
+            
+            printDebugMessage("SCROLLING CONTINUED:", object: "\(currentPanDetails.description)\n\(currentScrollDetails.description)\ncurrentContnetOffset: \(tableView.contentOffset)")
         }
         
     }
@@ -889,12 +1003,17 @@ private extension TableViewScrollAndSelectController {
     private func changeRowSelection(at indexPath: IndexPath, select: Bool) {
         
         if select && (tableView.indexPathsForSelectedRows == nil || !tableView.indexPathsForSelectedRows!.contains(indexPath)) {
+            printDebugMessage("ROW SELECTED AT \(indexPath)")
             tableView.selectRow(at: indexPath, animated: true, scrollPosition: .none)
             tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
         } else if !select && (tableView.indexPathsForSelectedRows != nil && tableView.indexPathsForSelectedRows!.contains(indexPath)) {
+            printDebugMessage("ROW DESELECTED AT \(indexPath)")
             tableView.deselectRow(at: indexPath, animated: true)
             tableView.delegate?.tableView?(tableView, didDeselectRowAt: indexPath)
+        } else {
+            printDebugMessage("TRIED TO \(select ? "SELECT" : "DESELECT") ROW AT \(indexPath) BUT IT ALREADY WAS")
         }
+        
     }
     
     // Calculate if the current pan gesture has reached the edge of the table view or not
@@ -905,6 +1024,18 @@ private extension TableViewScrollAndSelectController {
             return currentPanDetails.position.y > (superviewRect.origin.y + superviewRect.height) + bottomScrollingAnchor
         } else {
             return currentPanDetails.position.y < superviewRect.origin.y + topScrollingAnchor
+        }
+    }
+    
+    // Print to console if in debug mode
+    private func printDebugMessage(_ message: String, object: Any? = nil) {
+        
+        if isInDebugMode {
+            var msg = "TableViewScrollAndSelect DEBUG LOG <\(debugLogDateFormatter.string(from: Date()))> -> \(message)"
+            if let obj = object {
+                msg += "\n{\n\(obj)\n}"
+            }
+            print(msg)
         }
     }
 }
