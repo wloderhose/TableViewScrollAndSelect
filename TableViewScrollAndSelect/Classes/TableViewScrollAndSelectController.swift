@@ -61,8 +61,9 @@ import UIKit
  **Touch view:** `TableViewScrollAndSelectController` adds an invisible `UIView` as the topmost view over your `UITableView`. This touch view and your `UITableView` share the same superview. The touch view receives pan and tap gestures from the user, interprets them, and updates the selection and scrolling of your `UITableView` accordingly.
  * The touch view uses auto layout.
  * The touch view is automatically added or removed from the superview when you change the `enabled` property of the `TableViewScrollAndSelectController`. It is also removed when you call `invalidate()`.
- * By default, the touch view is 60 pixels wide. You can change this by setting the `touchAreaWidth` property to a custom value.
+ * By default, the touch view is 60 pixels wide. You can change this by setting the `touchViewWidth` property to a custom value.
  * By default, the touch view extends to the top, left, and bottom edges of the superview (not safe area). If you would like it to extend only to the safe area, set `touchViewCoversSafeArea = false`.
+ * You can also define your own set of constraints for the touch view by setting the `customConstraintClosure` property. This closure takes the touch view as a parameter and must return an array of `NSLayoutConstraint`. These constraints will be used instead of the default constraints which pin it to the top, left, and bottom edges. Providing custom constraints will override the `touchViewWidth` and `touchViewCoversSafeArea` properties.
  * Upon deinitialization, `TableViewScrollAndSelectController` will automatically remove its touch view from the view hierarchy. However, you can also do this manually by calling the `invalidate()` method , or setting `enabled = false`.
  
  **Tapping:** Tapping on the touch view simply selects / deselects that cell as it normally would.
@@ -77,12 +78,12 @@ import UIKit
  
  **Scrolling anchors:** By default, when a pan gesture reaches the top 40 pixels of the table view, the `TableViewScrollAndSelectController` will automatically begin scrolling up. To change this, set the `topScrollingAnchor` property to a custom value. Likewise, by default, when a pan gesture reaches the bottom 40 pixels of the table view, the `TableViewScrollAndSelectController` will automatically begin scrolling down. To change this, set the `bottomScrollingAnchor` property to a custom value. *Note: The bottom anchor needs to be a negative value; by default, the value is -40.0.*
  
- **Estimated row heights:** Using the estimated row height typically minimizes CPU usage, making scrolling more smooth. Unfortunately, if your estimated row heights are not accurate, it may cause some unwanted side effects. These are the most common issues you may experience:
+ **Estimated row heights:** `TableViewScrollAndSelect` uses the table view's estimated row height to calculate the necessary scrolling distance and speed. Using the estimated row height typically minimizes CPU usage, making scrolling more smooth. Unfortunately, if your estimated row heights are not accurate, it may cause some unwanted side effects. These are the most common issues you may experience:
  * The pan gesture does not reach the exact top or bottom of the table view.
- * When the user lifts their finger, the table view scrolls and select a few extra cells before stopping.
+ * When the user lifts their finger, the table view scrolls and selects a few extra cells before stopping.
  * While scrolling, cells are not being selected / deselected as soon as they come onto screen. This lag becomes more pronounced the longer the scroll animation lasts.
  
- To avoid these issues, make sure to provide an accurate estimated row height or set `shouldUseEstimatedRowHeightWhenScrolling = false`.
+ To avoid these issues, make sure to provide an accurate estimated row height in the `tableView(_:estimatedHeightForRowAt:)` function of your `UITableViewDelegate`. Alternatively, you can set `shouldUseEstimatedRowHeightWhenScrolling = false`. but be aware that this may cause lag while scrolling.
  
  ---
  
@@ -176,7 +177,7 @@ public class TableViewScrollAndSelectController {
     public var topScrollingAnchor: CGFloat
     
     /**
-     The point on the y-axis at which a pan gesture should begin scrolling the table view downwards.
+     The point on the y-axis, offset from the bottom of the superview, at which a pan gesture should begin scrolling the table view downwards.
      
      # Default value
      `-40.0`
@@ -206,7 +207,7 @@ public class TableViewScrollAndSelectController {
      
      - Attention: Using the estimated row height typically minimizes CPU usage, making scrolling more smooth. Unfortunately, if your estimated row heights are not accurate, it may cause some unwanted side effects. These are the most common issues you may experience:
      * The pan gesture does not reach the exact top or bottom of the table view.
-     * When the user lifts their finger, the table view scrolls and select a few extra cells before stopping.
+     * When the user lifts their finger, the table view scrolls and selects a few extra cells before stopping.
      * While scrolling, cells are not being selected / deselected as soon as they come onto screen. This lag becomes more pronounced the longer the scroll animation lasts.
      
      To avoid these issues, make sure to provide an accurate estimated row height or set this property to `false`.
@@ -262,7 +263,7 @@ public class TableViewScrollAndSelectController {
      Initializes and returns a `TableViewScrollAndSelectController` object.
      
      - Parameters:
-        - tableView: The `UITableView` for which you want to use scroll and select. The `TableViewScrollAndSelectController` will only retain a weak reference to this table view.
+        - tableView: The `UITableView` for which you want to use scroll and select. The `TableViewScrollAndSelectController` will retain only a weak reference to this table view.
     */
     public init(tableView: UITableView) {
         
@@ -285,7 +286,7 @@ public class TableViewScrollAndSelectController {
      Initializes and returns a `TableViewScrollAndSelectController` object with a specific scrolling speed.
      
      - Parameters:
-        - tableView: The `UITableView` for which you want to use scroll and select. The `TableViewScrollAndSelectController` will only retain a weak reference to this table view.
+        - tableView: The `UITableView` for which you want to use scroll and select. The `TableViewScrollAndSelectController` will retain only a weak reference to this table view.
         - scrollingSpeed: The speed at which the `UITableView` will scroll when a pan gesture reaches the top or bottom edge.
      */
     public convenience init(tableView: UITableView, scrollingSpeed: ScrollingSpeed) {
