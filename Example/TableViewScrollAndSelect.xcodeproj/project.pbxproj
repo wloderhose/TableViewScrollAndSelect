@@ -8,30 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		20B9EA05CC1F542489FA3D1C /* Pods_TableViewScrollAndSelect_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 369669AE20B662E5C03FFB4C /* Pods_TableViewScrollAndSelect_Example.framework */; };
-		2E8EB26C4172DBB04D2A26F9 /* Pods_TableViewScrollAndSelect_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0813D6FEDE4A20AEB340E43D /* Pods_TableViewScrollAndSelect_Tests.framework */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 607FACD91AFB9204008FA782 /* Main.storyboard */; };
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
-		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		BE8EBCD72140229D006C7064 /* ExampleSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */; };
 		BED8E2D42139CF41002282B4 /* ExampleTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED8E2D32139CF41002282B4 /* ExampleTableViewController.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		607FACE61AFB9204008FA782 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 607FACC81AFB9204008FA782 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 607FACCF1AFB9204008FA782;
-			remoteInfo = TableViewScrollAndSelect;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
-		0813D6FEDE4A20AEB340E43D /* Pods_TableViewScrollAndSelect_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TableViewScrollAndSelect_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		369669AE20B662E5C03FFB4C /* Pods_TableViewScrollAndSelect_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_TableViewScrollAndSelect_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		49C562B287F2DB952BA12064 /* Pods-TableViewScrollAndSelect_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TableViewScrollAndSelect_Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TableViewScrollAndSelect_Tests/Pods-TableViewScrollAndSelect_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		4C64D0E3365A8C000745D670 /* TableViewScrollAndSelect.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = TableViewScrollAndSelect.podspec; path = ../TableViewScrollAndSelect.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		54569B74DE7E9F20B806E9DF /* Pods-TableViewScrollAndSelect_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TableViewScrollAndSelect_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-TableViewScrollAndSelect_Example/Pods-TableViewScrollAndSelect_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* TableViewScrollAndSelect_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TableViewScrollAndSelect_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -40,15 +26,11 @@
 		607FACDA1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		607FACDC1AFB9204008FA782 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		607FACDF1AFB9204008FA782 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
-		607FACE51AFB9204008FA782 /* TableViewScrollAndSelect_Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TableViewScrollAndSelect_Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		607FACEA1AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		968196EDA0AF5AA975F0E8BE /* Pods-TableViewScrollAndSelect_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TableViewScrollAndSelect_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-TableViewScrollAndSelect_Example/Pods-TableViewScrollAndSelect_Example.release.xcconfig"; sourceTree = "<group>"; };
 		BE192179D118B2381A10164F /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		BE8EBCD62140229D006C7064 /* ExampleSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleSettingsViewController.swift; sourceTree = "<group>"; };
 		BED8E2D32139CF41002282B4 /* ExampleTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleTableViewController.swift; sourceTree = "<group>"; };
 		ED1A07E93F6B5F7B5BB24914 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
-		FDED563E7EEEA99CAED9DCDC /* Pods-TableViewScrollAndSelect_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-TableViewScrollAndSelect_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-TableViewScrollAndSelect_Tests/Pods-TableViewScrollAndSelect_Tests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,14 +42,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		607FACE21AFB9204008FA782 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				2E8EB26C4172DBB04D2A26F9 /* Pods_TableViewScrollAndSelect_Tests.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -76,8 +50,6 @@
 			children = (
 				54569B74DE7E9F20B806E9DF /* Pods-TableViewScrollAndSelect_Example.debug.xcconfig */,
 				968196EDA0AF5AA975F0E8BE /* Pods-TableViewScrollAndSelect_Example.release.xcconfig */,
-				49C562B287F2DB952BA12064 /* Pods-TableViewScrollAndSelect_Tests.debug.xcconfig */,
-				FDED563E7EEEA99CAED9DCDC /* Pods-TableViewScrollAndSelect_Tests.release.xcconfig */,
 			);
 			name = Pods;
 			sourceTree = "<group>";
@@ -86,7 +58,6 @@
 			isa = PBXGroup;
 			children = (
 				369669AE20B662E5C03FFB4C /* Pods_TableViewScrollAndSelect_Example.framework */,
-				0813D6FEDE4A20AEB340E43D /* Pods_TableViewScrollAndSelect_Tests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -96,7 +67,6 @@
 			children = (
 				607FACF51AFB993E008FA782 /* Podspec Metadata */,
 				607FACD21AFB9204008FA782 /* Example for TableViewScrollAndSelect */,
-				607FACE81AFB9204008FA782 /* Tests */,
 				607FACD11AFB9204008FA782 /* Products */,
 				1BB4591E040650C0A9863991 /* Pods */,
 				47F74BB600A293F181870A95 /* Frameworks */,
@@ -107,7 +77,6 @@
 			isa = PBXGroup;
 			children = (
 				607FACD01AFB9204008FA782 /* TableViewScrollAndSelect_Example.app */,
-				607FACE51AFB9204008FA782 /* TableViewScrollAndSelect_Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -131,23 +100,6 @@
 			isa = PBXGroup;
 			children = (
 				607FACD41AFB9204008FA782 /* Info.plist */,
-			);
-			name = "Supporting Files";
-			sourceTree = "<group>";
-		};
-		607FACE81AFB9204008FA782 /* Tests */ = {
-			isa = PBXGroup;
-			children = (
-				607FACEB1AFB9204008FA782 /* Tests.swift */,
-				607FACE91AFB9204008FA782 /* Supporting Files */,
-			);
-			path = Tests;
-			sourceTree = "<group>";
-		};
-		607FACE91AFB9204008FA782 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				607FACEA1AFB9204008FA782 /* Info.plist */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -184,26 +136,6 @@
 			productReference = 607FACD01AFB9204008FA782 /* TableViewScrollAndSelect_Example.app */;
 			productType = "com.apple.product-type.application";
 		};
-		607FACE41AFB9204008FA782 /* TableViewScrollAndSelect_Tests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 607FACF21AFB9204008FA782 /* Build configuration list for PBXNativeTarget "TableViewScrollAndSelect_Tests" */;
-			buildPhases = (
-				70CBCBB0A44083ADDB34D067 /* [CP] Check Pods Manifest.lock */,
-				607FACE11AFB9204008FA782 /* Sources */,
-				607FACE21AFB9204008FA782 /* Frameworks */,
-				607FACE31AFB9204008FA782 /* Resources */,
-				426B1841AC956DFDE1C27CE2 /* [CP] Embed Pods Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				607FACE71AFB9204008FA782 /* PBXTargetDependency */,
-			);
-			name = TableViewScrollAndSelect_Tests;
-			productName = Tests;
-			productReference = 607FACE51AFB9204008FA782 /* TableViewScrollAndSelect_Tests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -218,12 +150,6 @@
 						CreatedOnToolsVersion = 6.3.1;
 						DevelopmentTeam = 4B47BJWYVA;
 						LastSwiftMigration = 0900;
-					};
-					607FACE41AFB9204008FA782 = {
-						CreatedOnToolsVersion = 6.3.1;
-						DevelopmentTeam = 4B47BJWYVA;
-						LastSwiftMigration = 0900;
-						TestTargetID = 607FACCF1AFB9204008FA782;
 					};
 				};
 			};
@@ -241,7 +167,6 @@
 			projectRoot = "";
 			targets = (
 				607FACCF1AFB9204008FA782 /* TableViewScrollAndSelect_Example */,
-				607FACE41AFB9204008FA782 /* TableViewScrollAndSelect_Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -254,13 +179,6 @@
 				607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		607FACE31AFB9204008FA782 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,30 +203,6 @@
 			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TableViewScrollAndSelect_Example/Pods-TableViewScrollAndSelect_Example-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		426B1841AC956DFDE1C27CE2 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${SRCROOT}/Pods/Target Support Files/Pods-TableViewScrollAndSelect_Tests/Pods-TableViewScrollAndSelect_Tests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/FBSnapshotTestCase/FBSnapshotTestCase.framework",
-				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
-				"${BUILT_PRODUCTS_DIR}/Nimble-Snapshots/Nimble_Snapshots.framework",
-				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FBSnapshotTestCase.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble_Snapshots.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Quick.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-TableViewScrollAndSelect_Tests/Pods-TableViewScrollAndSelect_Tests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		6D82BA44BBB1D203B7575CA7 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -321,24 +215,6 @@
 			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 				"$(DERIVED_FILE_DIR)/Pods-TableViewScrollAndSelect_Example-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		70CBCBB0A44083ADDB34D067 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-TableViewScrollAndSelect_Tests-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -358,23 +234,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		607FACE11AFB9204008FA782 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				607FACEC1AFB9204008FA782 /* Tests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		607FACE71AFB9204008FA782 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 607FACCF1AFB9204008FA782 /* TableViewScrollAndSelect_Example */;
-			targetProxy = 607FACE61AFB9204008FA782 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		607FACD91AFB9204008FA782 /* Main.storyboard */ = {
@@ -533,42 +393,6 @@
 			};
 			name = Release;
 		};
-		607FACF31AFB9204008FA782 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 49C562B287F2DB952BA12064 /* Pods-TableViewScrollAndSelect_Tests.debug.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = 4B47BJWYVA;
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TableViewScrollAndSelect_Example.app/TableViewScrollAndSelect_Example";
-			};
-			name = Debug;
-		};
-		607FACF41AFB9204008FA782 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = FDED563E7EEEA99CAED9DCDC /* Pods-TableViewScrollAndSelect_Tests.release.xcconfig */;
-			buildSettings = {
-				DEVELOPMENT_TEAM = 4B47BJWYVA;
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = Tests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
-				SWIFT_VERSION = 4.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/TableViewScrollAndSelect_Example.app/TableViewScrollAndSelect_Example";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -586,15 +410,6 @@
 			buildConfigurations = (
 				607FACF01AFB9204008FA782 /* Debug */,
 				607FACF11AFB9204008FA782 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		607FACF21AFB9204008FA782 /* Build configuration list for PBXNativeTarget "TableViewScrollAndSelect_Tests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				607FACF31AFB9204008FA782 /* Debug */,
-				607FACF41AFB9204008FA782 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
