@@ -50,6 +50,7 @@ import UIKit
     // Invalidate to release memory
     deinit {
         scrollAndSelectController?.invalidate()
+        scrollAndSelectController = nil
     }
  }
  ```
@@ -92,13 +93,21 @@ import UIKit
  To avoid these issues, make sure to provide an accurate estimated row height in the `tableView(_:estimatedHeightForRowAt:)` function of your `UITableViewDelegate`. Alternatively, you can set `shouldUseEstimatedRowHeightWhenScrolling = false`. but be aware that this may cause lag while scrolling.
  
  # Current Limitations
- Your `UITableView` must have a superview. This is true automatically if you are using a `UINavigationController`. If not, you will have to manually create your table view controller using a generic `UIViewController`.
- * Instantiate and add your `UITableView` as a subview.
- * Set your controller to be the `UITableViewDelegate` and `UITableViewDataSource` of the `UITableView`.
+ 1. Your `UITableView` must have a superview. This is true automatically if you are using a `UINavigationController`. If not, you will have to manually create your table view controller using a generic `UIViewController`.
+    * Instantiate and add your `UITableView` as a subview.
+    * Set your controller to be the `UITableViewDelegate` and `UITableViewDataSource` of the `UITableView`.
+ 
+ 2. `TableViewScrollAndSelect` currently has no tests.
  
 ---
  # Author
  Will Loderhose
+ 
+ # Version
+ 1.0.0
+ 
+ # Release Date
+ September 2018
  
 */
 public class TableViewScrollAndSelectController {

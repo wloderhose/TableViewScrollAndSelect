@@ -11,14 +11,8 @@ Pod::Spec.new do |s|
   s.version          = '1.0.0'
   s.summary          = 'Simultaneously scroll and select cells in a UITableView in response to simple pan gestures.'
 
-# This description is used to generate tags and improve search results.
-#   * Think: What does it do? Why did you write it? What is the focus?
-#   * Try to keep it short, snappy and to the point.
-#   * Write the description between the DESC delimiters below.
-#   * Finally, don't worry about the indent, CocoaPods strips it!
-
   s.description      = <<-DESC
-Have you ever wished UITableView made it easier to select more than one cell at a time? TableViewScrollAndSelect improves the default functionality of UITableView to allow multiple selection of cells and automatic scrolling using simple pan gestures.
+Transform a normal UITableView into a snazzy one by allowing users to pan up and down in order to quickly select multiple cells, and scroll the view as they go.
                        DESC
 
   s.homepage         = 'https://github.com/wloderhose/TableViewScrollAndSelect'
@@ -27,6 +21,7 @@ Have you ever wished UITableView made it easier to select more than one cell at 
   s.source           = { :git => 'https://github.com/wloderhose/TableViewScrollAndSelect.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '11.0'
+  s.swift_version    = '4.0'
 
   s.source_files = 'TableViewScrollAndSelect/Classes/**/*'
   s.frameworks = 'UIKit'
