@@ -10,7 +10,7 @@ Elegant multi-selection for `UITableView`
 1. [Overview](#overview)
 2. [Example](#example)
 3. [Installation](#installation)
-4. [Usage](#usage)
+4. [Setup](#setup)
 5. [How It Works](#how-it-works)
 6. [Customization](#customization)
 7. [Debug Mode](#debug-mode)
@@ -41,7 +41,7 @@ it, simply add the following line to your Podfile:
 pod 'TableViewScrollAndSelect'
 ```
 
-## Usage
+## Setup
 
 Once you've installed the CocoaPod, you need to make a couple of modifications to your `UITableViewController`.
 1. Import `TableViewScrollAndSelect`.
