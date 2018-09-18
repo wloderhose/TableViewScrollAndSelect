@@ -12,6 +12,12 @@ import UIKit
  Allows a `UITableView` to simultaneously scroll and select cells in response to simple pan gestures.
  
  # Important
+ * **Your UITableView must have a superview.** There are 2 main approaches to accomplishing this:
+    1. Put your `UITableViewController` inside a `UINavigationController` (recommended).
+    2. Manually create your table view controller using a generic `UIViewController`.
+        * Instantiate and add your `UITableView` as a subview.
+        * Set your controller to be the `UITableViewDelegate` and `UITableViewDataSource` of the `UITableView`.
+ 
  * **This class does not replace UITableViewController or create a UITableView.** In order to instantiate a `TableViewScrollAndSelectController`, you must provide it with a `UITableView` to which it will hold a weak reference.
  
  * `TableViewScrollAndSelectController` is **disabled by default.** To enable, set `enabled = true` and be sure that your `UITableView` is part of the app's view hierarchy when you do so.
@@ -85,15 +91,17 @@ import UIKit
  
  To avoid these issues, make sure to provide an accurate estimated row height in the `tableView(_:estimatedHeightForRowAt:)` function of your `UITableViewDelegate`. Alternatively, you can set `shouldUseEstimatedRowHeightWhenScrolling = false`. but be aware that this may cause lag while scrolling.
  
- ---
+ # Current Limitations
+ Your `UITableView` must have a superview. This is true automatically if you are using a `UINavigationController`. If not, you will have to manually create your table view controller using a generic `UIViewController`.
+ * Instantiate and add your `UITableView` as a subview.
+ * Set your controller to be the `UITableViewDelegate` and `UITableViewDataSource` of the `UITableView`.
  
+---
  # Author
  Will Loderhose
  
 */
 public class TableViewScrollAndSelectController {
-    
-    // MARK: - Public Types
     
     /**
      The speed at which the `UITableView` will scroll when a pan gesture reaches the top or bottom edge.
@@ -394,13 +402,12 @@ public class TableViewScrollAndSelectController {
     }
 }
 
-// MARK: -
 // MARK: - Delegate Protocol
 
 /**
  The delegate of a `TableViewScrollAndSelectController` must adopt the `TableViewScrollAndSelectDelegate` protocol. The delegate is notified when the `UITableView` begins and ends scrolling as a result of a scroll and select action.
  
- - Important: To monitor individual row selections, do not use this protocol; instead, override the `tableView(_:DidSelectRowAtIndexPath:)` and `tableView(_:DidDeselectRowAtIndexPath:)` functions in your `UITableViewDelegate`.
+ - Important: To monitor individual row selections, do not use this protocol; instead, override the `tableView(_:didSelectRowAtIndexPath:)` and `tableView(_:didDeselectRowAtIndexPath:)` functions in your `UITableViewDelegate`.
  
  ## Delegate Functions
  * `tableViewSelectionPanningDidBegin()`

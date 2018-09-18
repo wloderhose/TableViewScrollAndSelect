@@ -8,8 +8,8 @@
 
 Pod::Spec.new do |s|
   s.name             = 'TableViewScrollAndSelect'
-  s.version          = '0.1.0'
-  s.summary          = 'A short description of TableViewScrollAndSelect.'
+  s.version          = '1.0.0'
+  s.summary          = 'Simultaneously scroll and select cells in a UITableView in response to simple pan gestures.'
 
 # This description is used to generate tags and improve search results.
 #   * Think: What does it do? Why did you write it? What is the focus?
@@ -18,11 +18,10 @@ Pod::Spec.new do |s|
 #   * Finally, don't worry about the indent, CocoaPods strips it!
 
   s.description      = <<-DESC
-TODO: Add long description of the pod here.
+Have you ever wished UITableView made it easier to select more than one cell at a time? TableViewScrollAndSelect improves the default functionality of UITableView to allow multiple selection of cells and automatic scrolling using simple pan gestures.
                        DESC
 
   s.homepage         = 'https://github.com/wloderhose/TableViewScrollAndSelect'
-  # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'wloderhose' => 'wloderhose@gmail.com' }
   s.source           = { :git => 'https://github.com/wloderhose/TableViewScrollAndSelect.git', :tag => s.version.to_s }
@@ -30,12 +29,5 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '11.0'
 
   s.source_files = 'TableViewScrollAndSelect/Classes/**/*'
-  
-  # s.resource_bundles = {
-  #   'TableViewScrollAndSelect' => ['TableViewScrollAndSelect/Assets/*.png']
-  # }
-
-  # s.public_header_files = 'Pod/Classes/**/*.h'
   s.frameworks = 'UIKit'
-  # s.dependency 'AFNetworking', '~> 2.3'
 end
