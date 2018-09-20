@@ -98,7 +98,7 @@ There are two critical things to keep in mind when using TableViewScrollAndSelec
 
 1. **`TableViewScrollAndSelectController` does not replace `UITableViewController` or create a `UITableView` for you.** You must instantiate a `TableViewScrollAndSelectController` from your `UITableViewController`, passing in your `UITableView` as a parameter, to which it will hold a weak reference.
 
-2. **Your `UITableView` *must* have a superview.** This is due to the fact that a transparent view is added over the top of your table view to handle the pan gestures. There are 2 main ways you can accomplishing this:
+2. **Your `UITableView` *must* have a superview.** This is due to the fact that a transparent view is added over the top of your table view to handle the pan gestures. There are 2 main ways you can accomplish this:
     1. Put your `UITableViewController` inside a `UINavigationController` (recommended).
     2. Manually create your table view controller using a generic `UIViewController`.
         * Instantiate and add your `UITableView` as a subview.
@@ -149,7 +149,7 @@ Below is a complete list of all the fields that are currently customizable. For 
 
 * `shouldUseEstimatedRowHeightWhenScrolling`: A Boolean value indicating whether to use the estimated row height or actual row height of your table view rows in order to fine tune scrolling.
 
-* `customConstraintClosure`: A closure returning a custom set of constraints to use instead of the defaults.
+* `customConstraintClosure`: A closure returning a custom set of constraints to use for the touch view instead of the defaults.
 
 ## Debug Mode
 
@@ -184,7 +184,7 @@ If you still aren't getting it to scroll, check to make sure that you haven't ov
 
 ## Current Limitations
 
-* Though a great deal of testing and debugging took place during development, there are currently no actual tests written for the CocoaPod. 
+* Though a great deal of testing and debugging took place during development, there are currently no tests written for the CocoaPod. 
 
 * As mentioned earlier, your `UITableView` must have a superview. This can be tedious to set up properly if you are not using a `UINavigationController`.
 
